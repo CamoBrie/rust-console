@@ -7,7 +7,7 @@ use crate::state::State;
 pub trait Feature {
   fn get_key(&self) -> KeyCode;
   fn get_name(&self) -> StyledContent<&str>;
-  fn update(&mut self, state: &mut State);
+  fn update(&mut self, ms_step: f32, state: &mut State);
   fn render(&self, state: &State) -> String;
 }
 

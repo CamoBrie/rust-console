@@ -14,7 +14,7 @@ impl Feature for CounterFeature
     "Counter".cyan()
   }
 
-  fn update(&mut self, state: &mut State)
+  fn update(&mut self, _: f32, state: &mut State)
   {
     if state.key == KeyCode::Char('c') {
       state.count += 1;

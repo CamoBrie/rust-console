@@ -12,6 +12,8 @@ fn main() {
     let mut features = create_features();
     let mut state = create_state();
 
+    let ms_step: u32 = 100;
+
     // setup terminal
     execute!(stdout(), 
         Clear(ClearType::All), 
@@ -25,9 +27,9 @@ fn main() {
 
     // simple game loop: process input, step, render
     loop {
-        let key = wait_key(100);
+        let key = wait_key(ms_step.into());
         process_input(key, &features, &mut state);
-        step(&mut features, &mut state);
+        step(ms_step as f32 / 1000.0, &mut features, &mut state);
         render(&features, &state);
     }
 }
@@ -37,7 +39,7 @@ fn create_features() -> Vec<Box<dyn Feature>> {
     let mut features: Vec<Box<dyn Feature>> = Vec::new();
     features.push(Box::new(exit::ExitFeature));
     features.push(Box::new(counter::CounterFeature));
-    features.push(Box::new(fight::FightFeature));
+    features.push(Box::new(fight::FightFeature::default()));
     features
 }
 
@@ -48,21 +50,7 @@ fn create_state() -> State {
         key: KeyCode::Null,
         selected_feature: None,
 
-        fight: {
-            let player = fight::Player {
-                attack: 2,
-                defense: 0,
-                health: 10,
-                max_health: 10,
-            };
-            let enemy = fight::Enemy {
-                attack: 1,
-                defense: 0,
-                health: 10,
-                max_health: 10,
-            };
-            fight::FightData { player, enemy }
-        }
+        fight: fight::FightData::default(),
     }
 }
 
@@ -86,10 +74,10 @@ fn process_input(key: KeyCode, features: &Vec<Box<dyn Feature>>, state: &mut Sta
 }
 
 /// Step the current selected feature
-fn step(features: &mut Vec<Box<dyn Feature>>, state: &mut State) {
+fn step(ms_step: f32, features: &mut Vec<Box<dyn Feature>>, state: &mut State) {
     if let Some(i) = state.selected_feature {
         let feature = &mut features[i];
-        feature.update(state);
+        feature.update(ms_step, state);
     }
 }
 
@@ -137,7 +125,7 @@ fn wait_key(ms: u128) -> KeyCode {
             break input;
         }
 
-        if poll(Duration::from_millis(10)).is_ok() {
+        if let Ok(true) = poll(Duration::from_millis(10)) {
             if let Ok(Event::Key(key)) = crossterm::event::read() {
                 input = key.code;
             }

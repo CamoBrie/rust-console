@@ -13,7 +13,7 @@ impl Feature for ExitFeature {
     "Quit".dark_grey()
   }
 
-  fn update(&mut self, _: &mut State)
+  fn update(&mut self, _: f32, _: &mut State)
   {
     std::process::exit(0);
   }
