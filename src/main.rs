@@ -1,7 +1,9 @@
 mod feature;
 mod state;
 
-use console::Term;
+use std::io::Write;
+
+use console::{Term, StyledObject};
 
 use feature::*;
 use state::State;
@@ -11,32 +13,68 @@ fn main() {
     let mut features = create_features();
     let mut state = create_state();
 
-    loop {
-        process_input(&mut state);
-        step(&mut features, &mut state);
-        render(&features, &state);
-    }
+    let term = Term::stdout();
 
+    // first time render
+    render(&features, &state, &term);
+
+    loop {
+        process_input(&features, &mut state);
+        step(&mut features, &mut state);
+        render(&features, &state, &term);
+    }
 }
 
 fn create_features() -> Vec<Box<dyn Feature>> {
     let mut features: Vec<Box<dyn Feature>> = Vec::new();
     features.push(Box::new(counter::CounterFeature));
+    features.push(Box::new(fight::FightFeature));
     features
 }
 
 fn create_state() -> State {
     State {
         count: 0,
-        key: ' ',
+        key: None,
+        selected_feature: None,
+
+        fight: {
+            let player = fight::Player {
+                attack: 2,
+                defense: 0,
+                health: 10,
+                max_health: 10,
+            };
+            let enemy = fight::Enemy {
+                attack: 1,
+                defense: 0,
+                health: 10,
+                max_health: 10,
+            };
+            fight::FightData { player, enemy }
+        }
     }
 }
 
-fn process_input(state: &mut State) {
-    let input: char = Term::stdout().read_char().unwrap_or(' ');
-    match input {
-        'q' => std::process::exit(0),
-        k => state.key = k,
+fn process_input(features: &Vec<Box<dyn Feature>>, state: &mut State) {
+    let input: Result<char, std::io::Error> = Term::stdout().read_char();
+
+    if state.selected_feature.is_some() {
+        match input {
+            Ok('q') => state.selected_feature = None,
+            Ok(k) => state.key = Some(k),
+            Err(_) => state.key = None
+        }
+    } else {
+        match input {
+            Ok('q') => std::process::exit(0),
+            Ok(k) => {
+                state.selected_feature = {
+                    features.iter().position(|f| f.get_key() == k)
+                }
+            },
+            Err(_) => state.key = None
+        }
     }
 }
 
@@ -46,8 +84,20 @@ fn step(features: &mut Vec<Box<dyn Feature>>, state: &mut State) {
     }
 }
 
-fn render(features: &Vec<Box<dyn Feature>>, state: &State) {
-    for feature in features {
-        println!("{}", feature.render(state));
+fn render(features: &Vec<Box<dyn Feature>>, state: &State, term: &Term) {
+    if let Some(i) = state.selected_feature {
+        let feature = &features[i];
+
+        let str = format!("{}: {}", feature.get_name(), feature.render(state));
+        term.write_line(&str);
+        
+    } else {
+        let mut str = String::new();
+        for feature in features {
+            str.push_str(&format!("{} [{}] ", feature.get_name(), feature.get_key()));
+        }
+
+        term.clear_last_lines(1);
+        term.write_line(&str);
     }
 }
