@@ -1,9 +1,7 @@
 mod feature;
 mod state;
 
-use std::io::Write;
-
-use console::{Term, StyledObject};
+use console::{Term, Key};
 
 use feature::*;
 use state::State;
@@ -19,7 +17,7 @@ fn main() {
     render(&features, &state, &term);
 
     loop {
-        process_input(&features, &mut state);
+        process_input(&features, &mut state, &term);
         step(&mut features, &mut state);
         render(&features, &state, &term);
     }
@@ -35,7 +33,7 @@ fn create_features() -> Vec<Box<dyn Feature>> {
 fn create_state() -> State {
     State {
         count: 0,
-        key: None,
+        key: Key::Unknown,
         selected_feature: None,
 
         fight: {
@@ -56,30 +54,29 @@ fn create_state() -> State {
     }
 }
 
-fn process_input(features: &Vec<Box<dyn Feature>>, state: &mut State) {
-    let input: Result<char, std::io::Error> = Term::stdout().read_char();
+fn process_input(features: &Vec<Box<dyn Feature>>, state: &mut State, term: &Term) {
+    let input = term.read_key().unwrap_or(Key::Unknown);
 
     if state.selected_feature.is_some() {
         match input {
-            Ok('q') => state.selected_feature = None,
-            Ok(k) => state.key = Some(k),
-            Err(_) => state.key = None
+            Key::Char('q') => state.selected_feature = None,
+            k => state.key = k,
         }
     } else {
         match input {
-            Ok('q') => std::process::exit(0),
-            Ok(k) => {
+            Key::Char('q') => std::process::exit(0),
+            k => {
                 state.selected_feature = {
                     features.iter().position(|f| f.get_key() == k)
                 }
             },
-            Err(_) => state.key = None
         }
     }
 }
 
 fn step(features: &mut Vec<Box<dyn Feature>>, state: &mut State) {
-    for feature in features {
+    if let Some(i) = state.selected_feature {
+        let feature = &mut features[i];
         feature.update(state);
     }
 }
@@ -94,7 +91,11 @@ fn render(features: &Vec<Box<dyn Feature>>, state: &State, term: &Term) {
     } else {
         let mut str = String::new();
         for feature in features {
-            str.push_str(&format!("{} [{}] ", feature.get_name(), feature.get_key()));
+            if let Key::Char(k) = feature.get_key() {
+                str.push_str(&format!("{} [{}] ", feature.get_name(), k));
+            } else {
+                str.push_str(&format!("{} [?]", feature.get_name()));
+            }
         }
 
         term.clear_last_lines(1);

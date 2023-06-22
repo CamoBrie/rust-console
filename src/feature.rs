@@ -1,9 +1,9 @@
-use console::StyledObject;
+use console::{StyledObject, Key};
 
 use crate::state::State;
 
 pub trait Feature {
-  fn get_key(&self) -> char;
+  fn get_key(&self) -> Key;
   fn get_name(&self) -> StyledObject<&str>;
   fn update(&mut self, state: &mut State);
   fn render(&self, state: &State) -> String;

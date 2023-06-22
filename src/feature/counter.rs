@@ -1,12 +1,12 @@
 use crate::{feature::{Feature}, state::State};
-use console::{style, StyledObject};
+use console::{style, StyledObject, Key};
 
 pub struct CounterFeature;
 
 impl Feature for CounterFeature
 {
-  fn get_key(&self) -> char {
-    'c'
+  fn get_key(&self) -> Key {
+    console::Key::Char('c')
   }
 
   fn get_name(&self) -> StyledObject<&str> {
@@ -15,7 +15,7 @@ impl Feature for CounterFeature
 
   fn update(&mut self, state: &mut State)
   {
-    if state.key == Some('c') {
+    if state.key == console::Key::Char('c') {
       state.count += 1;
     }
   }
