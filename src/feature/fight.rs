@@ -21,18 +21,18 @@ impl Feature for FightFeature {
 
       if state.fight.player.health <= 0 {
         state.fight.player.health = 0;
-        println!("You died!");
       }
 
       if state.fight.enemy.health <= 0 {
         state.fight.enemy.health = 0;
-        println!("You won!");
       }
     }
   }
 
   fn render(&self, state: &State) -> String {
-    format!("Player: {} Enemy: {}", state.fight.player.health, state.fight.enemy.health)
+    format!("Player: {} Enemy: {} \n {}", state.fight.player.health, state.fight.enemy.health, 
+      {if state.fight.player.health > 0 {"Fight!"} else {"You died!"}}
+    )
 
   }
 }
