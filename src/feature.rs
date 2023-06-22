@@ -13,3 +13,4 @@ pub trait Feature {
 
 pub mod counter;
 pub mod fight;
+pub mod exit;
