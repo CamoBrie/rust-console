@@ -1,9 +1,9 @@
 mod feature;
 mod state;
 
-use std::{io::stdout, time::Duration};
+use std::{io::{stdout, Write}, time::Duration};
 
-use crossterm::{event::{KeyCode, poll, Event}, execute, style::{Print}, cursor::{MoveToNextLine, MoveTo, DisableBlinking, Hide}, terminal::{Clear, ClearType}};
+use crossterm::{event::{KeyCode, poll, Event}, execute, style::{Print, StyledContent, Stylize}, cursor::{MoveToNextLine, MoveTo, DisableBlinking, Hide}, terminal::{Clear, ClearType}, queue};
 use feature::*;
 use state::State;
 
@@ -84,14 +84,23 @@ fn step(ms_step: f32, features: &mut Vec<Box<dyn Feature>>, state: &mut State) {
 /// Render the current selected feature, or the list of features
 fn render(features: &Vec<Box<dyn Feature>>, state: &State) {
 
+    let mut stdout = stdout();
+
     // render the selected feature
     if let Some(i) = state.selected_feature {
         let feature = &features[i];
 
-        execute!(stdout(), 
+        queue!(stdout, 
             Clear(ClearType::All), 
             MoveTo(0,0), 
             Print(feature.get_name()),
+        ).expect("Failed to render");
+
+        render_keys(feature.get_inputs()).iter().for_each(|s| {
+            queue!(stdout, Print(s)).expect("Failed to render");
+        });
+
+        queue!(stdout,
             MoveToNextLine(1),
             Print(feature.render(state)),
         ).expect("Failed to render");
@@ -100,19 +109,27 @@ fn render(features: &Vec<Box<dyn Feature>>, state: &State) {
     } else {
         let mut str = String::new();
         for feature in features {
-            match feature.get_key() {
-                KeyCode::Char(c) => str.push_str(&format!("{} [{}] ",feature.get_name(), c)),
-                KeyCode::Esc => str.push_str(&format!("{} [Esc] ", feature.get_name())),
-                _ => str.push_str(&format!("{} [?]", feature.get_name()))
-            }
+            str.push_str(&format!("[{}]{} ", get_string(feature.get_key()), feature.get_name()));
         }
 
-        execute!(stdout(), 
+        queue!(stdout, 
             Clear(ClearType::All), 
             MoveTo(0,0), 
             Print(str)
         ).expect("Failed to render");
     }
+
+    stdout.flush().expect("Failed to render");
+}
+
+/// Render a list of keys into a list of styled strings
+fn render_keys(keys: Vec<(KeyCode, StyledContent<String>)>) -> Vec<StyledContent<String>> {
+    let mut str: Vec<StyledContent<String>> = Vec::new();
+    for (key, text) in keys {
+        str.push(format!(" [{}]", get_string(key)).stylize());
+        str.push(text);
+    }
+    str
 }
 
 /// Wait for a key for a certain amount of time
@@ -130,5 +147,16 @@ fn wait_key(ms: u128) -> KeyCode {
                 input = key.code;
             }
         };
+    }
+}
+
+/// Get a string representation of a key
+fn get_string(key: KeyCode) -> String {
+    match key {
+        KeyCode::Char(c) => format!("{}", c),
+        KeyCode::Esc => "Esc".to_string(),
+        KeyCode::Left => "<-".to_string(),
+        KeyCode::Right => "->".to_string(),
+        _ => "?".to_string(),
     }
 }

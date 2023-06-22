@@ -1,6 +1,11 @@
 use crossterm::{event::KeyCode, style::{StyledContent, Stylize}};
 use crate::{feature::Feature, state::State};
 
+/// Fight feature
+/// A feature that allows the player to fight enemies.
+/// The player can move up and down floors, attack enemies and collect gold.
+/// The player can also level up and gain more health.
+/// The player can die and respawn.
 #[derive(Default)]
 pub struct FightFeature {
   attack: bool, // player attack flag
@@ -18,6 +23,14 @@ impl Feature for FightFeature {
 
   fn get_name(&self) -> StyledContent<&str> {
     "Fight".red()
+  }
+
+  fn get_inputs(&self) -> Vec<(KeyCode, StyledContent<String>)> {
+    vec![
+      (KeyCode::Left, "Go down a floor".to_string().stylize()),
+      (KeyCode::Right, "Go up a floor".to_string().stylize()),
+      (KeyCode::Char('a'), "Attack".to_string().stylize())
+    ]
   }
 
   fn update(&mut self, ms_step: f32, state: &mut State) {
@@ -62,6 +75,7 @@ impl Feature for FightFeature {
   }
 }
 
+/// Update the fight feature timers, and set flags if the timers are up.
 fn update_timers(flags: &mut FightFeature, ms_step: f32, data: &mut FightData) {
   if data.respawn_timer > 0.0 && data.enemy.is_none() && data.floor > 0 {
     data.respawn_timer -= ms_step;
@@ -83,6 +97,7 @@ fn update_timers(flags: &mut FightFeature, ms_step: f32, data: &mut FightData) {
   }
 }
 
+/// Process user input
 fn process_input(flags: &mut FightFeature, key: KeyCode, data: &mut FightData) {
   match key {
     KeyCode::Left => { // go down a floor
@@ -99,7 +114,7 @@ fn process_input(flags: &mut FightFeature, key: KeyCode, data: &mut FightData) {
       data.enemy_timer = data.enemy_max;
       data.enemy = None;
     },
-    KeyCode::Char(' ') => { 
+    KeyCode::Char('a') => { 
       if data.attack_timer <= 0.0 {
         data.attack_timer = data.attack_max;
         flags.attack = true;
@@ -109,6 +124,7 @@ fn process_input(flags: &mut FightFeature, key: KeyCode, data: &mut FightData) {
   }
 }
 
+/// Perform actions based on flags
 fn perform_flags(flags: &mut FightFeature, data: &mut FightData) {
   if flags.attack {
     flags.attack = false;
@@ -180,6 +196,7 @@ fn perform_flags(flags: &mut FightFeature, data: &mut FightData) {
 
 }
 
+/// Starting state for the fight feature
 impl Default for FightData {
   fn default() -> Self {
     Self {
@@ -199,7 +216,7 @@ impl Default for FightData {
       respawn_timer: 0.0,
       respawn_max: 3.0,
 
-      attack_timer: 0.0,
+      attack_timer: 1.5,
       attack_max: 1.5,
 
       enemy_timer: 2.0,
@@ -213,6 +230,8 @@ impl Default for FightData {
   }
 }
 
+/// Data for the fight feature.
+/// It contains all data related to the feature
 pub struct FightData {
   pub player: Living,
   enemy: Option<Living>,
@@ -238,6 +257,7 @@ pub struct FightData {
   pub level: u32,
 }
 
+/// Struct for the living entities in the fight feature
 pub struct Living {
   pub attack: f64,
   pub defense: f64,
