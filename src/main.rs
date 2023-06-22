@@ -16,6 +16,7 @@ fn main() {
     // first time render
     render(&features, &state, &term);
 
+    // simple game loop: process input, step, render
     loop {
         process_input(&features, &mut state, &term);
         step(&mut features, &mut state);
@@ -23,6 +24,7 @@ fn main() {
     }
 }
 
+/// Create all features
 fn create_features() -> Vec<Box<dyn Feature>> {
     let mut features: Vec<Box<dyn Feature>> = Vec::new();
     features.push(Box::new(counter::CounterFeature));
@@ -30,6 +32,7 @@ fn create_features() -> Vec<Box<dyn Feature>> {
     features
 }
 
+/// Create initial state
 fn create_state() -> State {
     State {
         count: 0,
@@ -54,6 +57,7 @@ fn create_state() -> State {
     }
 }
 
+/// Process input
 fn process_input(features: &Vec<Box<dyn Feature>>, state: &mut State, term: &Term) {
     let input = term.read_key().unwrap_or(Key::Unknown);
 
@@ -74,6 +78,7 @@ fn process_input(features: &Vec<Box<dyn Feature>>, state: &mut State, term: &Ter
     }
 }
 
+/// Step the current selected feature
 fn step(features: &mut Vec<Box<dyn Feature>>, state: &mut State) {
     if let Some(i) = state.selected_feature {
         let feature = &mut features[i];
@@ -81,6 +86,7 @@ fn step(features: &mut Vec<Box<dyn Feature>>, state: &mut State) {
     }
 }
 
+/// Render the current selected feature, or the list of features
 fn render(features: &Vec<Box<dyn Feature>>, state: &State, term: &Term) {
     if let Some(i) = state.selected_feature {
         let feature = &features[i];
