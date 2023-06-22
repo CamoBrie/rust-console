@@ -1,12 +1,12 @@
-use console::Key;
-
 use crate::feature::fight::FightData;
+use crossterm::event::KeyCode;
+
 
 /// State struct:
 /// A struct that holds the state of the application. This is the data that is passed around to all features.
 pub struct State {
   pub count: i32,
-  pub key: Key,
+  pub key: KeyCode,
   pub selected_feature: Option<usize>,
 
   pub fight: FightData,

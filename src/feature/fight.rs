@@ -1,21 +1,21 @@
-use console::{StyledObject, style, Key};
-
+use crossterm::{event::KeyCode, style::{StyledContent, Stylize}};
 use crate::{feature::Feature, state::State};
+
 
 pub struct FightFeature;
 
 impl Feature for FightFeature {
 
-  fn get_key(&self) -> Key {
-    console::Key::Char('f')
+  fn get_key(&self) -> KeyCode {
+    KeyCode::Char('f')
   }
 
-  fn get_name(&self) -> StyledObject<&str> {
-    style("Fight").red()
+  fn get_name(&self) -> StyledContent<&str> {
+    "Fight".red()
   }
 
   fn update(&mut self, state: &mut State) {
-    if state.key == console::Key::Char('c') {
+    if state.key == KeyCode::Char('f') {
       state.fight.player.health -= state.fight.enemy.attack - state.fight.player.defense;
       state.fight.enemy.health -= state.fight.player.attack - state.fight.enemy.defense;
 

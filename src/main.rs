@@ -1,8 +1,9 @@
 mod feature;
 mod state;
 
-use console::{Term, Key};
+use std::{io::stdout, time::Duration};
 
+use crossterm::{event::{KeyCode, poll, Event}, execute, style::{Print}, cursor::{MoveToPreviousLine, MoveToNextLine, MoveTo, DisableBlinking, Hide}, terminal::{Clear, ClearType}};
 use feature::*;
 use state::State;
 
@@ -11,16 +12,18 @@ fn main() {
     let mut features = create_features();
     let mut state = create_state();
 
-    let term = Term::stdout();
+    // setup terminal
+    execute!(stdout(), Clear(ClearType::All), MoveTo(0,0), DisableBlinking, Hide);
 
     // first time render
-    render(&features, &state, &term);
+    render(&features, &state);
 
     // simple game loop: process input, step, render
     loop {
-        process_input(&features, &mut state, &term);
+        let key = wait(100);
+        process_input(key, &features, &mut state);
         step(&mut features, &mut state);
-        render(&features, &state, &term);
+        render(&features, &state);
     }
 }
 
@@ -36,7 +39,7 @@ fn create_features() -> Vec<Box<dyn Feature>> {
 fn create_state() -> State {
     State {
         count: 0,
-        key: Key::Unknown,
+        key: KeyCode::Null,
         selected_feature: None,
 
         fight: {
@@ -58,17 +61,16 @@ fn create_state() -> State {
 }
 
 /// Process input
-fn process_input(features: &Vec<Box<dyn Feature>>, state: &mut State, term: &Term) {
-    let input = term.read_key().unwrap_or(Key::Unknown);
-
+fn process_input(key: KeyCode, features: &Vec<Box<dyn Feature>>, state: &mut State) {
+    
     if state.selected_feature.is_some() {
-        match input {
-            Key::Char('q') => state.selected_feature = None,
+        match key {
+            KeyCode::Char('q') => state.selected_feature = None,
             k => state.key = k,
         }
     } else {
-        match input {
-            Key::Char('q') => std::process::exit(0),
+        match key {
+            KeyCode::Char('q') => std::process::exit(0),
             k => {
                 state.selected_feature = {
                     features.iter().position(|f| f.get_key() == k)
@@ -87,24 +89,41 @@ fn step(features: &mut Vec<Box<dyn Feature>>, state: &mut State) {
 }
 
 /// Render the current selected feature, or the list of features
-fn render(features: &Vec<Box<dyn Feature>>, state: &State, term: &Term) {
+fn render(features: &Vec<Box<dyn Feature>>, state: &State) {
     if let Some(i) = state.selected_feature {
         let feature = &features[i];
 
         let str = format!("{}: {}", feature.get_name(), feature.render(state));
-        term.write_line(&str);
+        execute!(stdout(), Clear(ClearType::All), MoveTo(0,0), Print(str) );
         
     } else {
         let mut str = String::new();
         for feature in features {
-            if let Key::Char(k) = feature.get_key() {
+            if let KeyCode::Char(k) = feature.get_key() {
                 str.push_str(&format!("{} [{}] ", feature.get_name(), k));
             } else {
                 str.push_str(&format!("{} [?]", feature.get_name()));
             }
         }
 
-        term.clear_last_lines(1);
-        term.write_line(&str);
+        execute!(stdout(), Clear(ClearType::All), MoveTo(0,0), Print(str));
+    }
+}
+
+/// Wait for a key for a certain amount of time
+fn wait(ms: u128) -> KeyCode {
+    let mut input = KeyCode::Null;
+    let now = std::time::Instant::now();
+
+    loop {
+        if now.elapsed().as_millis() >= ms {
+            break input;
+        }
+
+        if poll(Duration::from_millis(10)).is_ok() {
+            if let Ok(Event::Key(key)) = crossterm::event::read() {
+                input = key.code;
+            }
+        };
     }
 }

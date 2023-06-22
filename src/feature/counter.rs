@@ -1,21 +1,22 @@
-use crate::{feature::{Feature}, state::State};
-use console::{style, StyledObject, Key};
+use crossterm::{event::KeyCode, style::{StyledContent, Stylize}};
+use crate::{feature::Feature, state::State};
+
 
 pub struct CounterFeature;
 
 impl Feature for CounterFeature
 {
-  fn get_key(&self) -> Key {
-    console::Key::Char('c')
+  fn get_key(&self) -> KeyCode {
+    KeyCode::Char('c')
   }
 
-  fn get_name(&self) -> StyledObject<&str> {
-    style("Counter").cyan()
+  fn get_name(&self) -> StyledContent<&str> {
+    "Counter".cyan()
   }
 
   fn update(&mut self, state: &mut State)
   {
-    if state.key == console::Key::Char('c') {
+    if state.key == KeyCode::Char('c') {
       state.count += 1;
     }
   }
