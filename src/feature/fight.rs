@@ -47,7 +47,7 @@ impl Feature for FightFeature {
     }
   }
 
-  fn render(&self, state: &State) -> String {
+  fn render(&self, state: &State) -> Vec<StyledContent<String>> {
     let mut str = String::new();
     let data = &state.fight;
 
@@ -70,7 +70,7 @@ impl Feature for FightFeature {
       if self.player_dead { "playerDead " } else { "" },
     ));
 
-    str
+    vec![str.stylize()]
 
   }
 }
@@ -153,12 +153,7 @@ fn perform_flags(flags: &mut FightFeature, data: &mut FightData) {
   if flags.respawn {
     flags.respawn = false;
     if data.floor > 0 { // only spawn enemy if not on floor 0
-      data.enemy = Some(Living {
-        attack: 1.0, // TODO: make formula based on floor
-        defense: 0.0,
-        health: 5.0,
-        max_health: 5.0,
-      });
+      data.enemy = Some(get_enemy(data.floor));
       data.enemy_timer = data.enemy_max;
     }
   };
@@ -168,11 +163,14 @@ fn perform_flags(flags: &mut FightFeature, data: &mut FightData) {
     data.enemy = None;
     data.enemy_timer = data.enemy_max;
 
-    data.gold += 1; // TODO: make formula based on floor
-    data.xp += 1; // TODO: make formula based on floor
-    if data.xp >= data.xp_to_next_level { // TODO: make formula based on floor
+    data.gold += data.floor;
+    data.xp += data.floor as u64;
+    if data.xp >= data.xp_to_next_level {
       data.xp -= data.xp_to_next_level;
-      data.xp_to_next_level += 10;
+
+      let xp_increase = 10.0 * 1.03f32.powi(data.level as i32);
+
+      data.xp_to_next_level += xp_increase as u64;
       data.level += 1;
     };
 
@@ -190,10 +188,21 @@ fn perform_flags(flags: &mut FightFeature, data: &mut FightData) {
   if flags.player_dead {
     flags.player_dead = false;
     data.player.health = data.player.max_health;
-    data.gold = (data.gold as f64 * 0.5) as u32; // TODO: make better
+    data.gold = (data.gold as f64 * 0.5).max(0.5) as u32;
+    data.enemy = None;
     data.floor = 0;
   };
 
+}
+
+/// Get a new enemy based on the floor
+fn get_enemy(floor: u32) -> Living {
+  Living {
+    attack: 0.9 + floor as f64 * 0.1,
+    defense: if floor >= 5 { (floor - 5) as f64 * 0.1 } else { 0.0 },
+    health: 3.0 + floor as f64 * 2.0,
+    max_health: 3.0 + floor as f64 * 2.0,
+  }
 }
 
 /// Starting state for the fight feature

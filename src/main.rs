@@ -1,11 +1,14 @@
 mod feature;
 mod state;
+mod util;
 
 use std::{io::{stdout, Write}, time::Duration};
 
 use crossterm::{event::{KeyCode, poll, Event}, execute, style::{Print, StyledContent, Stylize}, cursor::{MoveToNextLine, MoveTo, DisableBlinking, Hide}, terminal::{Clear, ClearType}, queue};
 use feature::*;
 use state::State;
+
+use crate::util::commands::PrintAll;
 
 fn main() {
     
@@ -94,15 +97,9 @@ fn render(features: &Vec<Box<dyn Feature>>, state: &State) {
             Clear(ClearType::All), 
             MoveTo(0,0), 
             Print(feature.get_name()),
-        ).expect("Failed to render");
-
-        render_keys(feature.get_inputs()).iter().for_each(|s| {
-            queue!(stdout, Print(s)).expect("Failed to render");
-        });
-
-        queue!(stdout,
+            PrintAll(render_keys(feature.get_inputs())),
             MoveToNextLine(1),
-            Print(feature.render(state)),
+            PrintAll(feature.render(state))
         ).expect("Failed to render");
     
     // or render the list of features

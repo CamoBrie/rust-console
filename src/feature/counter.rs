@@ -27,7 +27,7 @@ impl Feature for CounterFeature {
     }
   }
 
-  fn render(&self, state: &State) -> String {
-    format!("Count: {}", state.count)
+  fn render(&self, state: &State) -> Vec<StyledContent<String>> {
+    vec![format!("Count: {}", state.count).stylize()]
   }
 }

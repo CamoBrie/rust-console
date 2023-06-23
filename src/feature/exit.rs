@@ -23,8 +23,8 @@ impl Feature for ExitFeature {
     std::process::exit(0);
   }
 
-  fn render(&self, _: &State) -> String {
-    "See you later!".to_string()
+  fn render(&self, _: &State) -> Vec<StyledContent<String>> {
+    vec!["See you later!".to_string().stylize()]
   }
 }
 

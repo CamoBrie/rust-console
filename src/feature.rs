@@ -19,7 +19,7 @@ pub trait Feature {
   fn update(&mut self, ms_step: f32, state: &mut State);
 
   /// Render the feature
-  fn render(&self, state: &State) -> String;
+  fn render(&self, state: &State) -> Vec<StyledContent<String>>;
 }
 
 pub mod counter;
