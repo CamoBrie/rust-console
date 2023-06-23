@@ -7,6 +7,7 @@ use std::{io::{stdout, Write}, time::Duration};
 use crossterm::{event::{KeyCode, poll, Event}, execute, style::{Print, StyledContent, Stylize}, cursor::{MoveToNextLine, MoveTo, DisableBlinking, Hide}, terminal::{Clear, ClearType}, queue};
 use feature::*;
 use state::State;
+use util::conv::get_string;
 
 use crate::util::commands::PrintAll;
 
@@ -144,16 +145,5 @@ fn wait_key(ms: u128) -> KeyCode {
                 input = key.code;
             }
         };
-    }
-}
-
-/// Get a string representation of a key
-fn get_string(key: KeyCode) -> String {
-    match key {
-        KeyCode::Char(c) => format!("{}", c),
-        KeyCode::Esc => "Esc".to_string(),
-        KeyCode::Left => "<-".to_string(),
-        KeyCode::Right => "->".to_string(),
-        _ => "?".to_string(),
     }
 }
