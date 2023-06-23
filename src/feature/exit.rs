@@ -8,7 +8,7 @@ pub struct ExitFeature;
 
 impl Feature for ExitFeature {
   fn get_key(&self) -> KeyCode {
-    KeyCode::Char('q')
+    KeyCode::Esc
   }
 
   fn get_name(&self) -> StyledContent<&str> {

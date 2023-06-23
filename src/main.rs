@@ -9,7 +9,7 @@ use feature::*;
 use state::State;
 use util::conv::get_string;
 
-use crate::util::commands::PrintAll;
+use crate::util::commands::{PrintAll, Divider};
 
 fn main() {
     
@@ -100,6 +100,7 @@ fn render(features: &Vec<Box<dyn Feature>>, state: &State) {
             Print(feature.get_name()),
             PrintAll(render_keys(feature.get_inputs())),
             MoveToNextLine(1),
+            Divider('='),
             PrintAll(feature.render(state))
         ).expect("Failed to render");
     
