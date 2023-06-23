@@ -19,8 +19,8 @@ impl Feature for ExitFeature {
     vec![]
   }
 
-  fn update(&mut self, _: f32, _: &mut State) {
-    std::process::exit(0);
+  fn update(&mut self, _: f32, state: &mut State) {
+    state.quit = true;
   }
 
   fn render(&self, _: &State) -> Vec<StyledContent<String>> {

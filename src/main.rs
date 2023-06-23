@@ -4,7 +4,7 @@ mod util;
 
 use std::{io::{stdout, Write}, time::Duration};
 
-use crossterm::{event::{KeyCode, poll, Event}, execute, style::{Print, StyledContent, Stylize}, cursor::{MoveToNextLine, MoveTo, DisableBlinking, Hide}, terminal::{Clear, ClearType}, queue};
+use crossterm::{event::{KeyCode, poll, Event}, execute, style::{Print, StyledContent, Stylize}, cursor::{MoveToNextLine, MoveTo, DisableBlinking, Hide, EnableBlinking, Show}, terminal::{Clear, ClearType}, queue};
 use feature::*;
 use state::State;
 use util::conv::get_string;
@@ -23,7 +23,7 @@ fn main() {
         Clear(ClearType::All), 
         MoveTo(0,0), 
         DisableBlinking, 
-        Hide
+        Hide,
     ).expect("Failed to setup terminal");
 
     // first time render
@@ -35,7 +35,19 @@ fn main() {
         process_input(key, &features, &mut state);
         step(ms_step as f32 / 1000.0, &mut features, &mut state);
         render(&features, &state);
+
+        if state.quit {
+            break;
+        }
     }
+
+    // cleanup terminal
+    execute!(stdout(), 
+        Clear(ClearType::All), 
+        MoveTo(0,0), 
+        EnableBlinking,
+        Show,
+    ).expect("Failed to cleanup terminal");
 }
 
 /// Create all features
@@ -50,10 +62,11 @@ fn create_features() -> Vec<Box<dyn Feature>> {
 /// Create initial state
 fn create_state() -> State {
     State {
-        count: 0,
         key: KeyCode::Null,
         selected_feature: None,
+        quit: false,
 
+        count: 0,
         fight: fight::FightData::default(),
     }
 }
@@ -141,9 +154,11 @@ fn wait_key(ms: u128) -> KeyCode {
             break input;
         }
 
-        if let Ok(true) = poll(Duration::from_millis(10)) {
+        if let Ok(true) = poll(Duration::from_millis(0)) {
             if let Ok(Event::Key(key)) = crossterm::event::read() {
-                input = key.code;
+                if key.kind == crossterm::event::KeyEventKind::Press {
+                    input = key.code;
+                }
             }
         };
     }
