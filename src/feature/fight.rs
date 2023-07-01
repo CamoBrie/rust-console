@@ -1,6 +1,6 @@
 use crossterm::{event::KeyCode, style::{StyledContent, Stylize}};
-use crate::{feature::Feature, state::State};
-use enum_iterator::{all, cardinality, Sequence};
+use crate::{feature::Feature, state::State, util::flag::Flag, util::flag::Flags};
+use enum_iterator::Sequence;
 
 /// Fight feature
 /// A feature that allows the player to fight enemies.
@@ -8,7 +8,7 @@ use enum_iterator::{all, cardinality, Sequence};
 /// The player can also level up and gain more health.
 /// The player can die and respawn.
 pub struct FightFeature {
-  flags: Flags<FightFlag>,
+  flags: Flags<FightFlag, FightData>,
 }
 impl Default for FightFeature {
   fn default() -> FightFeature {
@@ -27,12 +27,8 @@ enum FightFlag{
   PlayerDead
 }
 
-trait Flag: Sequence + Eq + Copy {
-  fn handle(&self, data: &mut FightData, flags: &mut Flags<Self>);
-}
-
-impl Flag for FightFlag{
-    fn handle(&self, data: &mut FightData, flags: &mut Flags<Self>){
+impl Flag<FightData> for FightFlag{
+    fn handle(&self, data: &mut FightData, flags: &mut Flags<Self, FightData>){
         match self {
           FightFlag::Attack => {
             if let Some(enemy) = &mut data.enemy {
@@ -95,48 +91,6 @@ impl Flag for FightFlag{
     }
 }
 
-struct Flags<T: Flag + Eq + Copy>{
-  state: Vec<Option<T>>
-}
-
-impl<T: Flag + Eq + Copy> Flags<T>{
-  fn mark(&mut self, f: T){
-    self.state[Flags::index_of(f).unwrap()] = Some(f);
-  }
-
-  fn is_marked(&self, f: T) -> bool{
-    if let Some(i) = Flags::index_of(f){
-      return self.state[i].is_some();
-    }
-    false
-  }
-
-  fn index_of(f: T) -> Option<usize> {
-    all::<T>().position(|flag| flag == f)
-  }
-
-  fn handle(&mut self, data: &mut FightData){
-    let mut next: Flags<T> = Flags::new(); //TODO: only clear each flag when handled
-    for f in self.state.iter().flatten(){
-      f.handle(data, &mut next);
-    }
-    self.state = next.state;
-  }
-
-  fn new() -> Flags<T> {
-    Flags{
-      state: vec![None; cardinality::<T>()]
-    }
-  }
-
-  fn display_if_marked(&self, f: T) -> &str{
-    match self.is_marked(f) {
-      true => "flagged",
-      false => ""
-    }
-  }
-}
-
 
 impl Feature for FightFeature {
 
@@ -171,29 +125,27 @@ impl Feature for FightFeature {
   }
 
   fn render(&self, state: &State) -> Vec<StyledContent<String>> {
-    let mut str = String::new();
     let data = &state.fight;
-
-    str.push_str(&format!("Floor: {} | ", data.floor));
-    str.push_str(&format!("Gold: {} | ", data.gold));
-    str.push_str(&format!("Level: {} | ", data.level));
-    str.push_str(&format!("XP: {}/{} \n", data.xp, data.xp_to_next_level));
-    str.push_str(&format!("Enemy goal: {}/{} | ", data.enemy_count, data.enemy_required));
-    str.push_str(&format!("Enemy HP: {} | ", data.enemy.as_ref().map(|e| e.health).unwrap_or(0.0)));
-    str.push_str(&format!("Enemy attack: {:.2} | ", data.enemy_timer));
-    str.push_str(&format!("Respawn: {:.2}\n", data.respawn_timer));
-    str.push_str(&format!("Player HP: {:.2} | ", data.player.health));
-    str.push_str(&format!("Attack: {:.2}\n", data.attack_timer));
-
-    str.push_str(&format!("flags: {} {} {} {} {}\n", 
-      self.flags.display_if_marked(FightFlag::Attack),
-      self.flags.display_if_marked(FightFlag::EnemyAttack),
-      self.flags.display_if_marked(FightFlag::Respawn),
-      self.flags.display_if_marked(FightFlag::EnemyDead),
-      self.flags.display_if_marked(FightFlag::PlayerDead),
-    ));
-
-    vec![str.stylize()]
+    vec![
+        format!(
+            "Floor: {} | Gold: {} | Level: {} | XP: {}/{}",
+            data.floor,
+            data.gold,
+            data.level,
+            data.xp, data.xp_to_next_level
+            ).stylize(),
+        format!(
+            "Enemy goal: {}/{} | Enemy HP: {} | Enemy attack: {:.2} | Respawn: {:.2}",
+            data.enemy_count, data.enemy_required,
+            data.enemy.as_ref().map(|e| e.health).unwrap_or(0.0),
+            data.enemy_timer, data.respawn_timer
+            ).stylize(),
+        format!("Player HP: {:.2} | Attack: {:.2}",
+            data.player.health,
+            data.attack_timer
+            ).stylize(),
+        format!("{:?}", self.flags).stylize()
+    ]
   }
 }
 
