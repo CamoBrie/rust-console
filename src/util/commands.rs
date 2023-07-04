@@ -1,7 +1,7 @@
 use core::panic;
 use std::iter;
 
-use crossterm::{csi,Command, cursor::MoveToNextLine};
+use crossterm::{csi, cursor::MoveToNextLine, Command};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PrintAll<T: std::fmt::Display>(pub Vec<T>);
@@ -51,7 +51,11 @@ impl Command for Divider {
     fn write_ansi(&self, f: &mut impl std::fmt::Write) -> std::fmt::Result {
         write!(f, csi!("0G"))?;
         if let Ok((size, _)) = crossterm::terminal::size() {
-        write!(f, "{}", iter::repeat(self.0).take(size as usize).collect::<String>())
+            write!(
+                f,
+                "{}",
+                iter::repeat(self.0).take(size as usize).collect::<String>()
+            )
         } else {
             panic!("Failed to get terminal size");
         }

@@ -2,30 +2,42 @@ mod feature;
 mod state;
 mod util;
 
-use std::{io::{stdout, Write}, time::Duration};
+use std::{
+    io::{stdout, Write},
+    time::Duration,
+};
 
-use crossterm::{event::{KeyCode, poll, Event}, execute, style::{Print, StyledContent, Stylize}, cursor::{MoveToNextLine, MoveTo, DisableBlinking, Hide, EnableBlinking, Show}, terminal::{Clear, ClearType, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode}, queue};
+use crossterm::{
+    cursor::{DisableBlinking, EnableBlinking, Hide, MoveTo, MoveToNextLine, Show},
+    event::{poll, Event, KeyCode},
+    execute, queue,
+    style::{Print, StyledContent, Stylize},
+    terminal::{
+        disable_raw_mode, enable_raw_mode, Clear, ClearType, EnterAlternateScreen,
+        LeaveAlternateScreen,
+    },
+};
 use feature::*;
 use state::State;
 use util::conv::get_string;
 
-use crate::util::commands::{PrintAll, Divider, PrintAllLines};
+use crate::util::commands::{Divider, PrintAll, PrintAllLines};
 
 fn main() -> std::io::Result<()> {
-    
     enable_raw_mode()?;
-   
+
     let mut features = create_features();
     let mut state = create_state();
 
     let ms_step: u32 = 100;
 
     // setup terminal
-    execute!(stdout(), 
+    execute!(
+        stdout(),
         EnterAlternateScreen,
-        Clear(ClearType::All), 
-        MoveTo(0,0), 
-        DisableBlinking, 
+        Clear(ClearType::All),
+        MoveTo(0, 0),
+        DisableBlinking,
         Hide,
     )?;
 
@@ -47,9 +59,10 @@ fn main() -> std::io::Result<()> {
     disable_raw_mode()?;
 
     // cleanup terminal
-    execute!(stdout(), 
-        Clear(ClearType::All), 
-        MoveTo(0,0), 
+    execute!(
+        stdout(),
+        Clear(ClearType::All),
+        MoveTo(0, 0),
         EnableBlinking,
         Show,
         LeaveAlternateScreen
@@ -80,7 +93,6 @@ fn create_state() -> State {
 
 /// Process input
 fn process_input(key: KeyCode, features: &Vec<Box<dyn Feature>>, state: &mut State) {
-    
     if state.selected_feature.is_some() {
         match key {
             KeyCode::Char('q') => state.selected_feature = None,
@@ -88,11 +100,7 @@ fn process_input(key: KeyCode, features: &Vec<Box<dyn Feature>>, state: &mut Sta
         }
     } else {
         match key {
-            k => {
-                state.selected_feature = {
-                    features.iter().position(|f| f.get_key() == k)
-                }
-            },
+            k => state.selected_feature = features.iter().position(|f| f.get_key() == k),
         }
     }
 }
@@ -107,35 +115,36 @@ fn step(ms_step: f32, features: &mut Vec<Box<dyn Feature>>, state: &mut State) {
 
 /// Render the current selected feature, or the list of features
 fn render(features: &Vec<Box<dyn Feature>>, state: &State) {
-
     let mut stdout = stdout();
 
     // render the selected feature
     if let Some(i) = state.selected_feature {
         let feature = &features[i];
 
-        queue!(stdout, 
-            Clear(ClearType::All), 
-            MoveTo(0,0), 
+        queue!(
+            stdout,
+            Clear(ClearType::All),
+            MoveTo(0, 0),
             Print(feature.get_name()),
             PrintAll(render_keys(feature.get_inputs())),
             MoveToNextLine(1),
             Divider('='),
             PrintAllLines(feature.render(state))
-        ).expect("Failed to render");
-    
+        )
+        .expect("Failed to render");
+
     // or render the list of features
     } else {
         let mut str = String::new();
         for feature in features {
-            str.push_str(&format!("[{}]{} ", get_string(feature.get_key()), feature.get_name()));
+            str.push_str(&format!(
+                "[{}]{} ",
+                get_string(feature.get_key()),
+                feature.get_name()
+            ));
         }
 
-        queue!(stdout, 
-            Clear(ClearType::All), 
-            MoveTo(0,0), 
-            Print(str)
-        ).expect("Failed to render");
+        queue!(stdout, Clear(ClearType::All), MoveTo(0, 0), Print(str)).expect("Failed to render");
     }
 
     stdout.flush().expect("Failed to render");
