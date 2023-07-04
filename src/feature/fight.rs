@@ -5,6 +5,8 @@ use crossterm::{
 };
 use enum_iterator::Sequence;
 
+use super::inventory::{Item, Rarity};
+
 /// Fight feature
 /// A feature that allows the player to fight enemies.
 /// The player can move up and down floors, attack enemies and collect gold.
@@ -31,7 +33,8 @@ enum FightFlag {
 }
 
 impl Flag<FightData> for FightFlag {
-    fn handle(&self, data: &mut FightData, flags: &mut Flags<Self, FightData>) {
+    fn handle(&self, flags: &mut Flags<Self, FightData>, state: &mut State) {
+        let data = &mut state.fight;
         match self {
             FightFlag::Attack => {
                 if let Some(enemy) = &mut data.enemy {
@@ -64,32 +67,26 @@ impl Flag<FightData> for FightFlag {
                 data.enemy = None;
                 data.enemy_timer = data.enemy_max;
 
-                data.gold += data.floor;
-                data.xp += data.floor as u64;
-                if data.xp >= data.xp_to_next_level {
-                    data.xp -= data.xp_to_next_level;
+                state.inventory.add("Gold", data.floor as u64);
+                state.inventory.add("XP", data.floor as u64);
+
+                if state.inventory.get_amount("XP") >= data.xp_to_next_level {
+                    state.inventory.remove("XP", data.xp_to_next_level);
 
                     let xp_increase = 10.0 * 1.03f32.powi(data.level as i32);
 
                     data.xp_to_next_level += xp_increase as u64;
                     data.level += 1;
-                };
-
-                if data.floor == data.max_floor {
-                    data.enemy_count += 1;
-
-                    if data.enemy_count >= data.enemy_required {
-                        data.max_floor += 1;
-                        data.enemy_count = 0;
-                        data.enemy_required += 1;
-                    };
-                };
+                }
             }
             FightFlag::PlayerDead => {
                 data.player.health = data.player.max_health;
-                data.gold = (data.gold as f64 * 0.5).max(0.5) as u32;
                 data.enemy = None;
                 data.floor = 0;
+
+                state
+                    .inventory
+                    .remove("Gold", state.inventory.get_amount("Gold") * 0.5 as u64);
             }
         };
     }
@@ -104,17 +101,17 @@ impl Feature for FightFeature {
         "Fight".red()
     }
 
-    fn get_inputs(&self) -> Vec<(KeyCode, StyledContent<String>)> {
+    fn get_top_bar(&self, _state: &State) -> Vec<StyledContent<String>> {
         vec![
-            (KeyCode::Left, "Go down a floor".to_string().stylize()),
-            (KeyCode::Right, "Go up a floor".to_string().stylize()),
-            (KeyCode::Char('a'), "Attack".to_string().stylize()),
+            " [<]Go down a floor ".to_string().stylize(),
+            "[>]Go up a floor ".to_string().stylize(),
+            "[a]Attack".to_string().stylize(),
         ]
     }
 
     fn update(&mut self, ms_step: f32, state: &mut State) {
         process_input(self, state.key, &mut state.fight);
-        perform_flags(self, &mut state.fight);
+        self.flags.handle(state);
         update_timers(self, ms_step, &mut state.fight);
 
         // simple healing at floor 0.
@@ -131,7 +128,11 @@ impl Feature for FightFeature {
         vec![
             format!(
                 "Floor: {} | Gold: {} | Level: {} | XP: {}/{}",
-                data.floor, data.gold, data.level, data.xp, data.xp_to_next_level
+                data.floor,
+                state.inventory.get_amount("Gold"),
+                data.level,
+                state.inventory.get_amount("XP"),
+                data.xp_to_next_level
             )
             .stylize(),
             format!(
@@ -208,11 +209,6 @@ fn process_input(flags: &mut FightFeature, key: KeyCode, data: &mut FightData) {
     }
 }
 
-/// Perform actions based on flags
-fn perform_flags(flags: &mut FightFeature, data: &mut FightData) {
-    flags.flags.handle(data);
-}
-
 /// Get a new enemy based on the floor
 fn get_enemy(floor: u32) -> Living {
     Living {
@@ -253,8 +249,6 @@ impl Default for FightData {
             enemy_timer: 2.0,
             enemy_max: 2.0,
 
-            gold: 0,
-            xp: 0,
             xp_to_next_level: 10,
             level: 1,
         }
@@ -282,8 +276,6 @@ pub struct FightData {
     enemy_max: f32,
 
     // player data
-    pub gold: u32,
-    pub xp: u64,
     xp_to_next_level: u64,
     pub level: u32,
 }

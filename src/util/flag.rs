@@ -4,8 +4,10 @@ use std::{
     marker::PhantomData,
 };
 
+use crate::state::State;
+
 pub trait Flag<T>: Sequence + Eq + Copy + Debug {
-    fn handle(&self, data: &mut T, flags: &mut Flags<Self, T>);
+    fn handle(&self, flags: &mut Flags<Self, T>, state: &mut State);
     fn to_index(&self) -> usize {
         all::<Self>().position(|flag| &flag == self).expect(
             "The index of this variant should be within the list of all variants of this Sequence",
@@ -23,14 +25,18 @@ impl<T: Flag<X> + Eq + Copy + Debug, X> Flags<T, X> {
         self.state[f.to_index()] = Some(f);
     }
 
+    pub fn unmark(&mut self, f: T) {
+        self.state[f.to_index()] = None;
+    }
+
     pub fn is_marked(&self, f: &T) -> bool {
         self.state[f.to_index()].is_some()
     }
 
-    pub fn handle(&mut self, data: &mut X) {
+    pub fn handle(&mut self, state: &mut State) {
         let mut next: Flags<T, X> = Flags::new(); //TODO: only clear each flag when handled
         for f in self.state.iter().flatten() {
-            f.handle(data, &mut next);
+            f.handle(&mut next, state);
         }
         self.state = next.state;
     }

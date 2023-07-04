@@ -17,11 +17,8 @@ impl Feature for CounterFeature {
         "Counter".cyan()
     }
 
-    fn get_inputs(&self) -> Vec<(KeyCode, StyledContent<String>)> {
-        vec![(
-            KeyCode::Char('c'),
-            "Increment counter".to_string().stylize(),
-        )]
+    fn get_top_bar(&self, _state: &State) -> Vec<StyledContent<String>> {
+        vec![" [c]Increment counter".to_string().stylize()]
     }
 
     fn update(&mut self, _: f32, state: &mut State) {

@@ -17,7 +17,7 @@ impl Feature for ExitFeature {
         "Quit".dark_grey()
     }
 
-    fn get_inputs(&self) -> Vec<(KeyCode, StyledContent<String>)> {
+    fn get_top_bar(&self, _state: &State) -> Vec<StyledContent<String>> {
         vec![]
     }
 

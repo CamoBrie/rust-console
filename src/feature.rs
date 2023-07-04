@@ -12,7 +12,7 @@ pub trait Feature {
     fn get_name(&self) -> StyledContent<&str>;
 
     /// Get the list of inputs for this feature
-    fn get_inputs(&self) -> Vec<(KeyCode, StyledContent<String>)>;
+    fn get_top_bar(&self, state: &State) -> Vec<StyledContent<String>>;
 
     /// Update the feature
     fn update(&mut self, ms_step: f32, state: &mut State);
@@ -24,3 +24,4 @@ pub trait Feature {
 pub mod counter;
 pub mod exit;
 pub mod fight;
+pub mod inventory;

@@ -11,13 +11,13 @@ use crossterm::{
     cursor::{DisableBlinking, EnableBlinking, Hide, MoveTo, MoveToNextLine, Show},
     event::{poll, Event, KeyCode},
     execute, queue,
-    style::{Print, StyledContent, Stylize},
+    style::Print,
     terminal::{
         disable_raw_mode, enable_raw_mode, Clear, ClearType, EnterAlternateScreen,
         LeaveAlternateScreen,
     },
 };
-use feature::*;
+use feature::{counter, exit, fight, inventory, Feature};
 use state::State;
 use util::conv::get_string;
 
@@ -76,6 +76,7 @@ fn create_features() -> Vec<Box<dyn Feature>> {
     features.push(Box::new(exit::ExitFeature));
     features.push(Box::new(counter::CounterFeature));
     features.push(Box::new(fight::FightFeature::default()));
+    features.push(Box::new(inventory::InventoryFeature::default()));
     features
 }
 
@@ -88,6 +89,7 @@ fn create_state() -> State {
 
         count: 0,
         fight: fight::FightData::default(),
+        inventory: inventory::Inventory::default(),
     }
 }
 
@@ -126,7 +128,7 @@ fn render(features: &Vec<Box<dyn Feature>>, state: &State) {
             Clear(ClearType::All),
             MoveTo(0, 0),
             Print(feature.get_name()),
-            PrintAll(render_keys(feature.get_inputs())),
+            PrintAll(feature.get_top_bar(state)),
             MoveToNextLine(1),
             Divider('='),
             PrintAllLines(feature.render(state))
@@ -148,16 +150,6 @@ fn render(features: &Vec<Box<dyn Feature>>, state: &State) {
     }
 
     stdout.flush().expect("Failed to render");
-}
-
-/// Render a list of keys into a list of styled strings
-fn render_keys(keys: Vec<(KeyCode, StyledContent<String>)>) -> Vec<StyledContent<String>> {
-    let mut str: Vec<StyledContent<String>> = Vec::new();
-    for (key, text) in keys {
-        str.push(format!(" [{}]", get_string(key)).stylize());
-        str.push(text);
-    }
-    str
 }
 
 /// Wait for a key for a certain amount of time

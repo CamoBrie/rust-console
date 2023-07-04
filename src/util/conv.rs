@@ -7,6 +7,7 @@ pub fn get_string(key: KeyCode) -> String {
         KeyCode::Esc => "Esc".to_string(),
         KeyCode::Left => "<-".to_string(),
         KeyCode::Right => "->".to_string(),
+        KeyCode::Null => "".to_string(),
         _ => "?".to_string(),
     }
 }
