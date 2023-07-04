@@ -4,15 +4,17 @@ mod util;
 
 use std::{io::{stdout, Write}, time::Duration};
 
-use crossterm::{event::{KeyCode, poll, Event}, execute, style::{Print, StyledContent, Stylize}, cursor::{MoveToNextLine, MoveTo, DisableBlinking, Hide, EnableBlinking, Show}, terminal::{Clear, ClearType}, queue};
+use crossterm::{event::{KeyCode, poll, Event}, execute, style::{Print, StyledContent, Stylize}, cursor::{MoveToNextLine, MoveTo, DisableBlinking, Hide, EnableBlinking, Show}, terminal::{Clear, ClearType, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode}, queue};
 use feature::*;
 use state::State;
 use util::conv::get_string;
 
-use crate::util::commands::{PrintAll, Divider};
+use crate::util::commands::{PrintAll, Divider, PrintAllLines};
 
-fn main() {
+fn main() -> std::io::Result<()> {
     
+    enable_raw_mode()?;
+   
     let mut features = create_features();
     let mut state = create_state();
 
@@ -20,11 +22,12 @@ fn main() {
 
     // setup terminal
     execute!(stdout(), 
+        EnterAlternateScreen,
         Clear(ClearType::All), 
         MoveTo(0,0), 
         DisableBlinking, 
         Hide,
-    ).expect("Failed to setup terminal");
+    )?;
 
     // first time render
     render(&features, &state);
@@ -41,13 +44,17 @@ fn main() {
         }
     }
 
+    disable_raw_mode()?;
+
     // cleanup terminal
     execute!(stdout(), 
         Clear(ClearType::All), 
         MoveTo(0,0), 
         EnableBlinking,
         Show,
-    ).expect("Failed to cleanup terminal");
+        LeaveAlternateScreen
+    )?;
+    Ok(())
 }
 
 /// Create all features
@@ -114,7 +121,7 @@ fn render(features: &Vec<Box<dyn Feature>>, state: &State) {
             PrintAll(render_keys(feature.get_inputs())),
             MoveToNextLine(1),
             Divider('='),
-            PrintAll(feature.render(state))
+            PrintAllLines(feature.render(state))
         ).expect("Failed to render");
     
     // or render the list of features

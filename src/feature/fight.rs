@@ -1,19 +1,96 @@
 use crossterm::{event::KeyCode, style::{StyledContent, Stylize}};
-use crate::{feature::Feature, state::State};
+use crate::{feature::Feature, state::State, util::flag::Flag, util::flag::Flags};
+use enum_iterator::Sequence;
 
 /// Fight feature
 /// A feature that allows the player to fight enemies.
 /// The player can move up and down floors, attack enemies and collect gold.
 /// The player can also level up and gain more health.
 /// The player can die and respawn.
-#[derive(Default)]
 pub struct FightFeature {
-  attack: bool, // player attack flag
-  enemy_attack: bool, // enemy attack flag
-  respawn: bool, // enemy respawn flag
-  enemy_dead: bool, // reward flag
-  player_dead: bool, // death flag
+  flags: Flags<FightFlag, FightData>,
 }
+impl Default for FightFeature {
+  fn default() -> FightFeature {
+    FightFeature{
+      flags: Flags::new(),
+    }
+  }
+}
+
+#[derive(Eq, PartialEq, Copy, Clone, Debug, Sequence)]
+enum FightFlag{
+  Attack,
+  EnemyAttack,
+  Respawn,
+  EnemyDead,
+  PlayerDead
+}
+
+impl Flag<FightData> for FightFlag{
+    fn handle(&self, data: &mut FightData, flags: &mut Flags<Self, FightData>){
+        match self {
+          FightFlag::Attack => {
+            if let Some(enemy) = &mut data.enemy {
+              enemy.health -= (data.player.attack - enemy.defense).max(0.0);
+              data.attack_timer = data.attack_max;
+
+              if enemy.health <= 0.0 {
+                  flags.mark(FightFlag::EnemyDead)
+              }
+            }
+          },
+          FightFlag::EnemyAttack => {
+            if let Some(enemy) = &mut data.enemy {
+              data.player.health -= (enemy.attack - data.player.defense).max(0.0);
+              data.enemy_timer = data.enemy_max;
+
+              if data.player.health <= 0.0 {
+                flags.mark(FightFlag::PlayerDead);
+              }
+            }
+          },
+          FightFlag::Respawn => {
+            if data.floor > 0 { // only spawn enemy if not on floor 0
+              data.enemy = Some(get_enemy(data.floor));
+              data.enemy_timer = data.enemy_max;
+            }
+          },
+          FightFlag::EnemyDead => {
+            data.enemy = None;
+            data.enemy_timer = data.enemy_max;
+
+            data.gold += data.floor;
+            data.xp += data.floor as u64;
+            if data.xp >= data.xp_to_next_level {
+              data.xp -= data.xp_to_next_level;
+
+              let xp_increase = 10.0 * 1.03f32.powi(data.level as i32);
+
+              data.xp_to_next_level += xp_increase as u64;
+              data.level += 1;
+            };
+
+            if data.floor == data.max_floor {
+              data.enemy_count += 1;
+
+              if data.enemy_count >= data.enemy_required {
+                data.max_floor += 1;
+                data.enemy_count = 0;
+                data.enemy_required += 1;
+              };
+            };
+          },
+          FightFlag::PlayerDead => {
+            data.player.health = data.player.max_health;
+            data.gold = (data.gold as f64 * 0.5).max(0.5) as u32;
+            data.enemy = None;
+            data.floor = 0;
+          }
+        };
+    }
+}
+
 
 impl Feature for FightFeature {
 
@@ -48,30 +125,27 @@ impl Feature for FightFeature {
   }
 
   fn render(&self, state: &State) -> Vec<StyledContent<String>> {
-    let mut str = String::new();
     let data = &state.fight;
-
-    str.push_str(&format!("Floor: {} | ", data.floor));
-    str.push_str(&format!("Gold: {} | ", data.gold));
-    str.push_str(&format!("Level: {} | ", data.level));
-    str.push_str(&format!("XP: {}/{} \n", data.xp, data.xp_to_next_level));
-    str.push_str(&format!("Enemy goal: {}/{} | ", data.enemy_count, data.enemy_required));
-    str.push_str(&format!("Enemy HP: {} | ", data.enemy.as_ref().map(|e| e.health).unwrap_or(0.0)));
-    str.push_str(&format!("Enemy attack: {:.2} | ", data.enemy_timer));
-    str.push_str(&format!("Respawn: {:.2}\n", data.respawn_timer));
-    str.push_str(&format!("Player HP: {:.2} | ", data.player.health));
-    str.push_str(&format!("Attack: {:.2}\n", data.attack_timer));
-
-    str.push_str(&format!("flags: {} {} {} {} {}\n", 
-      if self.attack { "attack " } else { "" },
-      if self.enemy_attack { "enemyAttack " } else { "" },
-      if self.respawn { "respawn " } else { "" },
-      if self.enemy_dead { "enemyDead " } else { "" },
-      if self.player_dead { "playerDead " } else { "" },
-    ));
-
-    vec![str.stylize()]
-
+    vec![
+        format!(
+            "Floor: {} | Gold: {} | Level: {} | XP: {}/{}",
+            data.floor,
+            data.gold,
+            data.level,
+            data.xp, data.xp_to_next_level
+            ).stylize(),
+        format!(
+            "Enemy goal: {}/{} | Enemy HP: {} | Enemy attack: {:.2} | Respawn: {:.2}",
+            data.enemy_count, data.enemy_required,
+            data.enemy.as_ref().map(|e| e.health).unwrap_or(0.0),
+            data.enemy_timer, data.respawn_timer
+            ).stylize(),
+        format!("Player HP: {:.2} | Attack: {:.2}",
+            data.player.health,
+            data.attack_timer
+            ).stylize(),
+        format!("{:?}", self.flags).stylize()
+    ]
   }
 }
 
@@ -81,7 +155,7 @@ fn update_timers(flags: &mut FightFeature, ms_step: f32, data: &mut FightData) {
     data.respawn_timer -= ms_step;
     if data.respawn_timer <= 0.0 {
       data.respawn_timer = data.respawn_max;
-      flags.respawn = true;
+      flags.flags.mark(FightFlag::Respawn);
     }
   }
 
@@ -92,7 +166,7 @@ fn update_timers(flags: &mut FightFeature, ms_step: f32, data: &mut FightData) {
   if data.enemy_timer > 0.0 && data.enemy.is_some() {
     data.enemy_timer -= ms_step;
     if data.enemy_timer <= 0.0 {
-      flags.enemy_attack = true;
+      flags.flags.mark(FightFlag::EnemyAttack)
     }
   }
 }
@@ -117,7 +191,7 @@ fn process_input(flags: &mut FightFeature, key: KeyCode, data: &mut FightData) {
     KeyCode::Char('a') => { 
       if data.attack_timer <= 0.0 {
         data.attack_timer = data.attack_max;
-        flags.attack = true;
+        flags.flags.mark(FightFlag::Attack);
       }
     }
     _ => {}
@@ -126,73 +200,7 @@ fn process_input(flags: &mut FightFeature, key: KeyCode, data: &mut FightData) {
 
 /// Perform actions based on flags
 fn perform_flags(flags: &mut FightFeature, data: &mut FightData) {
-  if flags.attack {
-    flags.attack = false;
-    if let Some(enemy) = &mut data.enemy {
-      enemy.health -= (data.player.attack - enemy.defense).max(0.0);
-      data.attack_timer = data.attack_max;
-
-      if enemy.health <= 0.0 {
-        flags.enemy_dead = true;
-      }
-    }
-  };
-
-  if flags.enemy_attack {
-    flags.enemy_attack = false;
-    if let Some(enemy) = &mut data.enemy {
-      data.player.health -= (enemy.attack - data.player.defense).max(0.0);
-      data.enemy_timer = data.enemy_max;
-
-      if data.player.health <= 0.0 {
-        flags.player_dead = true;
-      }
-    }
-  };
-
-  if flags.respawn {
-    flags.respawn = false;
-    if data.floor > 0 { // only spawn enemy if not on floor 0
-      data.enemy = Some(get_enemy(data.floor));
-      data.enemy_timer = data.enemy_max;
-    }
-  };
-
-  if flags.enemy_dead {
-    flags.enemy_dead = false;
-    data.enemy = None;
-    data.enemy_timer = data.enemy_max;
-
-    data.gold += data.floor;
-    data.xp += data.floor as u64;
-    if data.xp >= data.xp_to_next_level {
-      data.xp -= data.xp_to_next_level;
-
-      let xp_increase = 10.0 * 1.03f32.powi(data.level as i32);
-
-      data.xp_to_next_level += xp_increase as u64;
-      data.level += 1;
-    };
-
-    if data.floor == data.max_floor {
-      data.enemy_count += 1;
-
-      if data.enemy_count >= data.enemy_required {
-        data.max_floor += 1;
-        data.enemy_count = 0;
-        data.enemy_required += 1;
-      };
-    };
-  };
-
-  if flags.player_dead {
-    flags.player_dead = false;
-    data.player.health = data.player.max_health;
-    data.gold = (data.gold as f64 * 0.5).max(0.5) as u32;
-    data.enemy = None;
-    data.floor = 0;
-  };
-
+  flags.flags.handle(data);
 }
 
 /// Get a new enemy based on the floor
