@@ -131,6 +131,10 @@ impl Feature for InventoryFeature {
         .bold()]
     }
 
+    fn is_unlocked(&self, state: &State) -> bool {
+        state.inventory.items.len() > 0
+    }
+
     fn update(&mut self, _ms_step: f32, state: &mut State) {
         process_input(self, state.key, state);
     }

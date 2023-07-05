@@ -102,7 +102,12 @@ fn process_input(key: KeyCode, features: &Vec<Box<dyn Feature>>, state: &mut Sta
         }
     } else {
         match key {
-            k => state.selected_feature = features.iter().position(|f| f.get_key() == k),
+            k => {
+                state.selected_feature = features
+                    .iter()
+                    .filter(|f| f.is_unlocked(state))
+                    .position(|f| f.get_key() == k)
+            }
         }
     }
 }
@@ -139,11 +144,13 @@ fn render(features: &Vec<Box<dyn Feature>>, state: &State) {
     } else {
         let mut str = String::new();
         for feature in features {
-            str.push_str(&format!(
-                "[{}]{} ",
-                get_string(feature.get_key()),
-                feature.get_name()
-            ));
+            if feature.is_unlocked(state) {
+                str.push_str(&format!(
+                    "[{}]{} ",
+                    get_string(feature.get_key()),
+                    feature.get_name()
+                ));
+            }
         }
 
         queue!(stdout, Clear(ClearType::All), MoveTo(0, 0), Print(str)).expect("Failed to render");
