@@ -21,7 +21,9 @@ impl Feature for ExitFeature {
         vec![]
     }
 
-    
+    fn get_description(&self) -> StyledContent<&str> {
+        "Exit the application.".dark_grey()
+    }
 
     fn update(&mut self, _: f32, state: &mut State) {
         state.quit = true;

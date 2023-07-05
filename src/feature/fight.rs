@@ -109,6 +109,10 @@ impl Feature for FightFeature {
         ]
     }
 
+    fn get_description(&self) -> StyledContent<&str> {
+        "Fight enemies, collect gold and XP.".dark_grey()
+    }
+
     fn update(&mut self, ms_step: f32, state: &mut State) {
         process_input(self, state.key, &mut state.fight);
         self.flags.handle(state);

@@ -21,6 +21,10 @@ impl Feature for CounterFeature {
         vec![" [c]Increment counter".to_string().stylize()]
     }
 
+    fn get_description(&self) -> StyledContent<&str> {
+        "A simple counter that increments when the 'c' key is pressed.".dark_grey()
+    }
+
     fn update(&mut self, _: f32, state: &mut State) {
         if state.key == KeyCode::Char('c') {
             state.count += 1;

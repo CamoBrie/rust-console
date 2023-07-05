@@ -15,9 +15,12 @@ pub trait Feature {
     fn get_top_bar(&self, state: &State) -> Vec<StyledContent<String>>;
 
     /// Check if this feature is unlocked
-    fn is_unlocked(&self, state: &State) -> bool {
+    fn is_unlocked(&self, _state: &State) -> bool {
         true
     }
+
+    /// Get the description of this feature
+    fn get_description(&self) -> StyledContent<&str>;
 
     /// Update the feature
     fn update(&mut self, ms_step: f32, state: &mut State);

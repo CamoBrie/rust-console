@@ -11,7 +11,7 @@ use crossterm::{
     cursor::{DisableBlinking, EnableBlinking, Hide, MoveTo, MoveToNextLine, Show},
     event::{poll, Event, KeyCode},
     execute, queue,
-    style::Print,
+    style::{Print, Stylize},
     terminal::{
         disable_raw_mode, enable_raw_mode, Clear, ClearType, EnterAlternateScreen,
         LeaveAlternateScreen,
@@ -150,6 +150,8 @@ fn render(features: &Vec<Box<dyn Feature>>, state: &State) {
                     get_string(feature.get_key()),
                     feature.get_name()
                 ));
+            } else {
+                str.push_str(&format!("{} ", feature.get_name().crossed_out()));
             }
         }
 

@@ -131,6 +131,10 @@ impl Feature for InventoryFeature {
         .bold()]
     }
 
+    fn get_description(&self) -> StyledContent<&str> {
+        "View your inventory".italic().white()
+    }
+
     fn is_unlocked(&self, state: &State) -> bool {
         state.inventory.items.len() > 0
     }
