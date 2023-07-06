@@ -67,13 +67,20 @@ impl Flag<FightData> for FightFlag {
                 data.enemy = None;
                 data.enemy_timer = data.enemy_max;
 
+                data.enemy_count += 1;
+                if data.enemy_count >= data.enemy_required {
+                    data.enemy_count = 0;
+                    data.enemy_required += 1;
+                    data.max_floor += 1;
+                }
+
                 state.inventory.add("Gold", data.floor as u64);
                 state.inventory.add("XP", data.floor as u64);
 
                 if state.inventory.get_amount("XP") >= data.xp_to_next_level {
                     state.inventory.remove("XP", data.xp_to_next_level);
 
-                    let xp_increase = 10.0 * 1.03f32.powi(data.level as i32);
+                    let xp_increase = 10.0 * 1.15f32.powi(data.level as i32);
 
                     data.xp_to_next_level += xp_increase as u64;
                     data.level += 1;
