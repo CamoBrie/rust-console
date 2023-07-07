@@ -116,6 +116,10 @@ impl Feature for FightFeature {
         ]
     }
 
+    fn counter_data(&self) -> (i32, i32, StyledContent<&str>) {
+        (10, 0, "".stylize())
+    }
+
     fn get_description(&self) -> StyledContent<&str> {
         "Fight enemies, collect gold and XP.".dark_grey()
     }
@@ -134,7 +138,7 @@ impl Feature for FightFeature {
         }
     }
 
-    fn render(&self, state: &State) -> Vec<StyledContent<String>> {
+    fn render(&self, state: &State, _: &Vec<Box<dyn Feature>>) -> Vec<StyledContent<String>> {
         let data = &state.fight;
         vec![
             format!(

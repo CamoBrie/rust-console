@@ -105,7 +105,7 @@ fn process_input(key: KeyCode, features: &Vec<Box<dyn Feature>>, state: &mut Sta
             k => {
                 state.selected_feature = features
                     .iter()
-                    .filter(|f| f.is_unlocked(state))
+                    .filter(|f| f.is_unlocked(state) && state.count >= f.counter_data().0)
                     .position(|f| f.get_key() == k)
             }
         }
@@ -136,7 +136,7 @@ fn render(features: &Vec<Box<dyn Feature>>, state: &State) {
             PrintAll(feature.get_top_bar(state)),
             MoveToNextLine(1),
             Divider('='),
-            PrintAllLines(feature.render(state))
+            PrintAllLines(feature.render(state, features))
         )
         .expect("Failed to render");
 
@@ -144,7 +144,7 @@ fn render(features: &Vec<Box<dyn Feature>>, state: &State) {
     } else {
         let mut str = String::new();
         for feature in features {
-            if feature.is_unlocked(state) {
+            if feature.is_unlocked(state) && state.count >= feature.counter_data().0 {
                 str.push_str(&format!(
                     "[{}]{} ",
                     get_string(feature.get_key()),

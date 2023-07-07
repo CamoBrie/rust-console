@@ -135,6 +135,10 @@ impl Feature for InventoryFeature {
         "View your inventory".italic().white()
     }
 
+    fn counter_data(&self) -> (i32, i32, StyledContent<&str>) {
+        (100, 0, " and more than 1 gold".stylize())
+    }
+
     fn is_unlocked(&self, state: &State) -> bool {
         state.inventory.items.len() > 0
     }
@@ -143,7 +147,7 @@ impl Feature for InventoryFeature {
         process_input(self, state.key, state);
     }
 
-    fn render(&self, state: &State) -> Vec<StyledContent<String>> {
+    fn render(&self, state: &State, _: &Vec<Box<dyn Feature>>) -> Vec<StyledContent<String>> {
         state
             .inventory
             .items

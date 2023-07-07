@@ -1,5 +1,5 @@
 use crate::state::State;
-use crossterm::{event::KeyCode, style::StyledContent};
+use crossterm::{event::KeyCode, style::{StyledContent, Stylize}};
 
 /// Feature trait:
 /// A trait that defines a feature. A feature is a part of the application that can be selected and updated.
@@ -19,6 +19,12 @@ pub trait Feature {
         true
     }
 
+    /// Get the data for the counter of this feature
+    /// (necessary count, visible count, text)
+    fn counter_data(&self) -> (i32, i32, StyledContent<&str>) {
+        (0, 0, "".stylize())
+    }
+
     /// Get the description of this feature
     fn get_description(&self) -> StyledContent<&str>;
 
@@ -26,7 +32,8 @@ pub trait Feature {
     fn update(&mut self, ms_step: f32, state: &mut State);
 
     /// Render the feature
-    fn render(&self, state: &State) -> Vec<StyledContent<String>>;
+    fn render(&self, state: &State, features: &Vec<Box<dyn Feature>>)
+        -> Vec<StyledContent<String>>;
 }
 
 pub mod counter;

@@ -29,7 +29,7 @@ impl Feature for ExitFeature {
         state.quit = true;
     }
 
-    fn render(&self, _: &State) -> Vec<StyledContent<String>> {
+    fn render(&self, _: &State, _: &Vec<Box<dyn Feature>>) -> Vec<StyledContent<String>> {
         vec!["See you later!".to_string().stylize()]
     }
 }
