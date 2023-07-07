@@ -5,8 +5,6 @@ use crossterm::{
 };
 use enum_iterator::Sequence;
 
-use super::inventory::{Item, Rarity};
-
 /// Fight feature
 /// A feature that allows the player to fight enemies.
 /// The player can move up and down floors, attack enemies and collect gold.
