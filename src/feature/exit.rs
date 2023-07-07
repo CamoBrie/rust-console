@@ -9,20 +9,19 @@ use crossterm::{
 pub struct ExitFeature;
 
 impl Feature for ExitFeature {
-    fn get_key(&self) -> KeyCode {
-        KeyCode::Esc
-    }
-
-    fn get_name(&self) -> StyledContent<&str> {
-        "Quit".dark_grey()
+    fn get_info(&self) -> super::FeatureInfo {
+        super::FeatureInfo {
+            key: KeyCode::Esc,
+            name: "Quit".dark_grey(),
+            description: "Exit the application.".dark_grey(),
+            visible_count: 0,
+            unlock_count: 0,
+            counter_string: "".stylize(),
+        }
     }
 
     fn get_top_bar(&self, _state: &State) -> Vec<StyledContent<String>> {
         vec![]
-    }
-
-    fn get_description(&self) -> StyledContent<&str> {
-        "Exit the application.".dark_grey()
     }
 
     fn update(&mut self, _: f32, state: &mut State) {

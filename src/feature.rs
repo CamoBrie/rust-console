@@ -1,32 +1,31 @@
 use crate::state::State;
-use crossterm::{event::KeyCode, style::{StyledContent, Stylize}};
+use crossterm::{event::KeyCode, style::StyledContent};
+
+/// Feature struct
+/// A struct that contains all the information about a feature
+pub struct FeatureInfo {
+    pub key: KeyCode,
+    pub name: StyledContent<&'static str>,
+    pub description: StyledContent<&'static str>,
+    pub visible_count: i32,
+    pub unlock_count: i32,
+    pub counter_string: StyledContent<&'static str>,
+}
 
 /// Feature trait:
 /// A trait that defines a feature. A feature is a part of the application that can be selected and updated.
 /// Each feature has a key, a name, a list of inputs, an update function and a render function.
 pub trait Feature {
-    /// Get the key that selects this feature
-    fn get_key(&self) -> KeyCode;
+    /// Get the info of this feature
+    fn get_info(&self) -> FeatureInfo;
 
-    /// Get the name of this feature
-    fn get_name(&self) -> StyledContent<&str>;
-
-    /// Get the list of inputs for this feature
+    /// Get the top bar of this feature
     fn get_top_bar(&self, state: &State) -> Vec<StyledContent<String>>;
 
     /// Check if this feature is unlocked
     fn is_unlocked(&self, _state: &State) -> bool {
         true
     }
-
-    /// Get the data for the counter of this feature
-    /// (necessary count, visible count, text)
-    fn counter_data(&self) -> (i32, i32, StyledContent<&str>) {
-        (0, 0, "".stylize())
-    }
-
-    /// Get the description of this feature
-    fn get_description(&self) -> StyledContent<&str>;
 
     /// Update the feature
     fn update(&mut self, ms_step: f32, state: &mut State);

@@ -114,12 +114,15 @@ impl default::Default for InventoryFeature {
 }
 
 impl Feature for InventoryFeature {
-    fn get_key(&self) -> KeyCode {
-        KeyCode::Char('i')
-    }
-
-    fn get_name(&self) -> StyledContent<&str> {
-        "Inventory".bold().white().on_black()
+    fn get_info(&self) -> super::FeatureInfo {
+        super::FeatureInfo {
+            key: KeyCode::Char('i'),
+            name: "Inventory".bold().white().on_black(),
+            description: "View your inventory".italic().white(),
+            visible_count: 5,
+            unlock_count: 100,
+            counter_string: " and more than 1 gold".stylize(),
+        }
     }
 
     fn get_top_bar(&self, state: &State) -> Vec<StyledContent<String>> {
@@ -129,14 +132,6 @@ impl Feature for InventoryFeature {
             state.inventory.max_size
         )
         .bold()]
-    }
-
-    fn get_description(&self) -> StyledContent<&str> {
-        "View your inventory".italic().white()
-    }
-
-    fn counter_data(&self) -> (i32, i32, StyledContent<&str>) {
-        (100, 0, " and more than 1 gold".stylize())
     }
 
     fn is_unlocked(&self, state: &State) -> bool {

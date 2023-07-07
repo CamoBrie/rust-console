@@ -100,12 +100,15 @@ impl Flag<FightData> for FightFlag {
 }
 
 impl Feature for FightFeature {
-    fn get_key(&self) -> KeyCode {
-        KeyCode::Char('f')
-    }
-
-    fn get_name(&self) -> StyledContent<&str> {
-        "Fight".red()
+    fn get_info(&self) -> super::FeatureInfo {
+        super::FeatureInfo {
+            key: KeyCode::Char('f'),
+            name: "Fight".red(),
+            description: "Fight enemies, collect gold and XP.".dark_grey(),
+            visible_count: 0,
+            unlock_count: 10,
+            counter_string: "".stylize(),
+        }
     }
 
     fn get_top_bar(&self, _state: &State) -> Vec<StyledContent<String>> {
@@ -114,14 +117,6 @@ impl Feature for FightFeature {
             "[>]Go up a floor ".to_string().stylize(),
             "[a]Attack".to_string().stylize(),
         ]
-    }
-
-    fn counter_data(&self) -> (i32, i32, StyledContent<&str>) {
-        (10, 0, "".stylize())
-    }
-
-    fn get_description(&self) -> StyledContent<&str> {
-        "Fight enemies, collect gold and XP.".dark_grey()
     }
 
     fn update(&mut self, ms_step: f32, state: &mut State) {

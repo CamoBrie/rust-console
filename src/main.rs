@@ -105,8 +105,8 @@ fn process_input(key: KeyCode, features: &Vec<Box<dyn Feature>>, state: &mut Sta
             k => {
                 state.selected_feature = features
                     .iter()
-                    .filter(|f| f.is_unlocked(state) && state.count >= f.counter_data().0)
-                    .position(|f| f.get_key() == k)
+                    .filter(|f| f.is_unlocked(state) && state.count >= f.get_info().unlock_count)
+                    .position(|f| f.get_info().key == k)
             }
         }
     }
@@ -132,7 +132,7 @@ fn render(features: &Vec<Box<dyn Feature>>, state: &State) {
             stdout,
             Clear(ClearType::All),
             MoveTo(0, 0),
-            Print(feature.get_name()),
+            Print(feature.get_info().name),
             PrintAll(feature.get_top_bar(state)),
             MoveToNextLine(1),
             Divider('='),
@@ -144,14 +144,12 @@ fn render(features: &Vec<Box<dyn Feature>>, state: &State) {
     } else {
         let mut str = String::new();
         for feature in features {
-            if feature.is_unlocked(state) && state.count >= feature.counter_data().0 {
-                str.push_str(&format!(
-                    "[{}]{} ",
-                    get_string(feature.get_key()),
-                    feature.get_name()
-                ));
+            let info = feature.get_info();
+
+            if feature.is_unlocked(state) && state.count >= info.unlock_count {
+                str.push_str(&format!("[{}]{} ", get_string(info.key), info.name));
             } else {
-                str.push_str(&format!("{} ", feature.get_name().crossed_out()));
+                str.push_str(&format!("{} ", info.name.crossed_out()));
             }
         }
 

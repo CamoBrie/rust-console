@@ -9,20 +9,19 @@ use crossterm::{
 pub struct CounterFeature;
 
 impl Feature for CounterFeature {
-    fn get_key(&self) -> KeyCode {
-        KeyCode::Char('c')
-    }
-
-    fn get_name(&self) -> StyledContent<&str> {
-        "Counter".cyan()
+    fn get_info(&self) -> super::FeatureInfo {
+        super::FeatureInfo {
+            key: KeyCode::Char('c'),
+            name: "Counter".cyan(),
+            description: "A simple counter that increments when the 'c' key is pressed. It is the way to unlock new content".dark_grey(),
+            visible_count: 0,
+            unlock_count: 0,
+            counter_string: "".stylize(),
+        }
     }
 
     fn get_top_bar(&self, _state: &State) -> Vec<StyledContent<String>> {
         vec![" [c]Increment counter".to_string().stylize()]
-    }
-
-    fn get_description(&self) -> StyledContent<&str> {
-        "A simple counter that increments when the 'c' key is pressed. It is the way to unlock new content".dark_grey()
     }
 
     fn update(&mut self, _: f32, state: &mut State) {
@@ -49,15 +48,19 @@ fn get_unlocks(state: &State, features: &Vec<Box<dyn Feature>>) -> Vec<StyledCon
     let mut unlocks = vec![];
 
     for feature in features {
-        let (necessary_count, visible_count, text) = feature.counter_data();
+        let info = feature.get_info();
 
-        if feature.is_unlocked(state) && state.count >= necessary_count {
+        if feature.is_unlocked(state) && state.count >= info.unlock_count {
             continue;
         }
 
-        if state.count >= visible_count {
+        if state.count >= info.visible_count {
             unlocks.push(
-                format!("{}{} unlocks {}", necessary_count, text, feature.get_name()).stylize(),
+                format!(
+                    "{}{} unlocks {}",
+                    info.unlock_count, info.counter_string, info.name
+                )
+                .stylize(),
             );
         }
     }
