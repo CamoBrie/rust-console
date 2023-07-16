@@ -117,14 +117,14 @@ impl Feature for FightFeature {
         ]
     }
 
-    fn update(&mut self, ms_step: f32, state: &mut State) {
+    fn update(&mut self, delta: f32, state: &mut State, _: &mut crate::message::MessageManager) {
         process_input(self, state.key, &mut state.fight);
         self.flags.handle(state);
-        update_timers(self, ms_step, &mut state.fight);
+        update_timers(self, delta, &mut state.fight);
 
         // simple healing at floor 0.
         if state.fight.floor == 0 && state.fight.player.health <= state.fight.player.max_health {
-            state.fight.player.health += ms_step as f64 * 0.5;
+            state.fight.player.health += delta as f64 * 0.5;
             if state.fight.player.health > state.fight.player.max_health {
                 state.fight.player.health = state.fight.player.max_health;
             }
@@ -163,9 +163,9 @@ impl Feature for FightFeature {
 }
 
 /// Update the fight feature timers, and set flags if the timers are up.
-fn update_timers(flags: &mut FightFeature, ms_step: f32, data: &mut FightData) {
+fn update_timers(flags: &mut FightFeature, delta: f32, data: &mut FightData) {
     if data.respawn_timer > 0.0 && data.enemy.is_none() && data.floor > 0 {
-        data.respawn_timer -= ms_step;
+        data.respawn_timer -= delta;
         if data.respawn_timer <= 0.0 {
             data.respawn_timer = data.respawn_max;
             flags.flags.mark(FightFlag::Respawn);
@@ -173,11 +173,11 @@ fn update_timers(flags: &mut FightFeature, ms_step: f32, data: &mut FightData) {
     }
 
     if data.attack_timer > 0.0 && data.enemy.is_some() {
-        data.attack_timer -= ms_step;
+        data.attack_timer -= delta;
     }
 
     if data.enemy_timer > 0.0 && data.enemy.is_some() {
-        data.enemy_timer -= ms_step;
+        data.enemy_timer -= delta;
         if data.enemy_timer <= 0.0 {
             flags.flags.mark(FightFlag::EnemyAttack)
         }

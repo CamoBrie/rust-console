@@ -1,4 +1,5 @@
 mod feature;
+mod message;
 mod state;
 mod util;
 
@@ -29,6 +30,8 @@ fn main() -> std::io::Result<()> {
     let mut features = create_features();
     let mut state = create_state();
 
+    let mut message_manager = message::MessageManager::default();
+
     let ms_step: u32 = 100;
 
     // setup terminal
@@ -41,15 +44,27 @@ fn main() -> std::io::Result<()> {
         Hide,
     )?;
 
+    // render hello message
+    message_manager.add_message(message::Message {
+        text: "Welcome to the game! First, go into the Counter feature.  You leave a feature with [q].".bold(),
+        location: message::TextLocation::Center,
+        duration: 5.0,
+    });
+
     // first time render
-    render(&features, &state);
+    render(&features, &state, &mut message_manager);
 
     // simple game loop: process input, step, render
     loop {
         let key = wait_key(ms_step.into());
         process_input(key, &features, &mut state);
-        step(ms_step as f32 / 1000.0, &mut features, &mut state);
-        render(&features, &state);
+        step(
+            ms_step as f32 / 1000.0,
+            &mut features,
+            &mut state,
+            &mut message_manager,
+        );
+        render(&features, &state, &mut message_manager);
 
         if state.quit {
             break;
@@ -113,15 +128,22 @@ fn process_input(key: KeyCode, features: &Vec<Box<dyn Feature>>, state: &mut Sta
 }
 
 /// Step the current selected feature
-fn step(ms_step: f32, features: &mut Vec<Box<dyn Feature>>, state: &mut State) {
+fn step(
+    delta: f32,
+    features: &mut Vec<Box<dyn Feature>>,
+    state: &mut State,
+    message: &mut message::MessageManager,
+) {
     if let Some(i) = state.selected_feature {
         let feature = &mut features[i];
-        feature.update(ms_step, state);
+        feature.update(delta, state, message);
     }
+
+    message.update(state.key, delta);
 }
 
 /// Render the current selected feature, or the list of features
-fn render(features: &Vec<Box<dyn Feature>>, state: &State) {
+fn render(features: &Vec<Box<dyn Feature>>, state: &State, message: &mut message::MessageManager) {
     let mut stdout = stdout();
 
     // render the selected feature
@@ -155,6 +177,8 @@ fn render(features: &Vec<Box<dyn Feature>>, state: &State) {
 
         queue!(stdout, Clear(ClearType::All), MoveTo(0, 0), Print(str)).expect("Failed to render");
     }
+
+    message.render_one();
 
     stdout.flush().expect("Failed to render");
 }

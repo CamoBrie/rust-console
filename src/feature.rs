@@ -28,7 +28,12 @@ pub trait Feature {
     }
 
     /// Update the feature
-    fn update(&mut self, ms_step: f32, state: &mut State);
+    fn update(
+        &mut self,
+        delta: f32,
+        state: &mut State,
+        message: &mut crate::message::MessageManager,
+    );
 
     /// Render the feature
     fn render(&self, state: &State, features: &Vec<Box<dyn Feature>>)

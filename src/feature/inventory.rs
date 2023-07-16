@@ -138,7 +138,7 @@ impl Feature for InventoryFeature {
         state.inventory.items.len() > 0
     }
 
-    fn update(&mut self, _ms_step: f32, state: &mut State) {
+    fn update(&mut self, _: f32, state: &mut State, _: &mut crate::message::MessageManager) {
         process_input(self, state.key, state);
     }
 

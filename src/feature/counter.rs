@@ -1,4 +1,4 @@
-use crate::{feature::Feature, state::State};
+use crate::{feature::Feature, message, state::State};
 use crossterm::{
     event::KeyCode,
     style::{StyledContent, Stylize},
@@ -24,8 +24,18 @@ impl Feature for CounterFeature {
         vec![" [c]Increment counter".to_string().stylize()]
     }
 
-    fn update(&mut self, _: f32, state: &mut State) {
+    fn update(&mut self, _: f32, state: &mut State, message: &mut message::MessageManager) {
         if state.key == KeyCode::Char('c') {
+            state.count += 1;
+        }
+
+        if state.count == 0 {
+            message.add_message(message::Message {
+                    text: "Keep going until you reach 10 count, you will unlock the fight feature! You can hide messages by pressing [Enter]."
+                        .bold(),
+                    location: message::TextLocation::Center,
+                    duration: 10.0,
+                });
             state.count += 1;
         }
     }
