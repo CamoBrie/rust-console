@@ -105,7 +105,7 @@ impl Feature for FightFeature {
             description: "Fight enemies, collect gold and XP.".dark_grey(),
             visible_count: 0,
             unlock_count: 10,
-            counter_string: "".stylize(),
+            counter_string: None,
         }
     }
 

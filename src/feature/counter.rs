@@ -16,7 +16,7 @@ impl Feature for CounterFeature {
             description: "A simple counter that increments when the 'c' key is pressed. It is the way to unlock new content".dark_grey(),
             visible_count: 0,
             unlock_count: 0,
-            counter_string: "".stylize(),
+            counter_string: None,
         }
     }
 
@@ -68,7 +68,9 @@ fn get_unlocks(state: &State, features: &Vec<Box<dyn Feature>>) -> Vec<StyledCon
             unlocks.push(
                 format!(
                     "{}{} unlocks {}",
-                    info.unlock_count, info.counter_string, info.name
+                    info.unlock_count,
+                    info.counter_string.unwrap_or("".stylize()),
+                    info.name
                 )
                 .stylize(),
             );

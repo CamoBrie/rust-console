@@ -16,7 +16,7 @@ impl Feature for ExitFeature {
             description: "Exit the application.".dark_grey(),
             visible_count: 0,
             unlock_count: 0,
-            counter_string: "".stylize(),
+            counter_string: None,
         }
     }
 

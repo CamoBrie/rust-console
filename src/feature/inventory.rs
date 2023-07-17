@@ -117,11 +117,11 @@ impl Feature for InventoryFeature {
     fn get_info(&self) -> super::FeatureInfo {
         super::FeatureInfo {
             key: KeyCode::Char('i'),
-            name: "Inventory".bold().white().on_black(),
+            name: "Inventory".white().bold(),
             description: "View your inventory".italic().white(),
             visible_count: 5,
             unlock_count: 100,
-            counter_string: " and more than 1 gold".stylize(),
+            counter_string: Some(" and more than 1 gold".stylize()),
         }
     }
 

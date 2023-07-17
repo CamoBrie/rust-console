@@ -9,7 +9,7 @@ pub struct FeatureInfo {
     pub description: StyledContent<&'static str>,
     pub visible_count: i32,
     pub unlock_count: i32,
-    pub counter_string: StyledContent<&'static str>,
+    pub counter_string: Option<StyledContent<&'static str>>,
 }
 
 /// Feature trait:
@@ -44,3 +44,4 @@ pub mod counter;
 pub mod exit;
 pub mod fight;
 pub mod inventory;
+pub mod shop;

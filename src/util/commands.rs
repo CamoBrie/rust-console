@@ -1,7 +1,12 @@
 use core::panic;
 use std::iter;
 
-use crossterm::{csi, cursor::MoveToNextLine, Command};
+use crossterm::{
+    csi,
+    cursor::MoveToNextLine,
+    terminal::{Clear, ClearType},
+    Command,
+};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PrintAll<T: std::fmt::Display>(pub Vec<T>);
@@ -29,6 +34,7 @@ impl<T: std::fmt::Display> Command for PrintAllLines<T> {
     fn write_ansi(&self, f: &mut impl std::fmt::Write) -> std::fmt::Result {
         self.0.iter().try_for_each(|t| {
             write!(f, "{}", t)?;
+            Clear(ClearType::UntilNewLine).write_ansi(f)?;
             MoveToNextLine(1).write_ansi(f)
         })
     }

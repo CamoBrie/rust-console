@@ -18,7 +18,7 @@ use crossterm::{
         LeaveAlternateScreen,
     },
 };
-use feature::{counter, exit, fight, inventory, Feature};
+use feature::{counter, exit, fight, inventory, shop, Feature};
 use state::State;
 use util::conv::get_string;
 
@@ -92,6 +92,7 @@ fn create_features() -> Vec<Box<dyn Feature>> {
     features.push(Box::new(counter::CounterFeature));
     features.push(Box::new(fight::FightFeature::default()));
     features.push(Box::new(inventory::InventoryFeature::default()));
+    features.push(Box::new(shop::ShopFeature));
     features
 }
 
@@ -118,10 +119,11 @@ fn process_input(key: KeyCode, features: &Vec<Box<dyn Feature>>, state: &mut Sta
     } else {
         match key {
             k => {
-                state.selected_feature = features
-                    .iter()
-                    .filter(|f| f.is_unlocked(state) && state.count >= f.get_info().unlock_count)
-                    .position(|f| f.get_info().key == k)
+                state.selected_feature = features.iter().position(|f| {
+                    f.is_unlocked(state)
+                        && state.count >= f.get_info().unlock_count
+                        && f.get_info().key == k
+                })
             }
         }
     }
