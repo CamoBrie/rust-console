@@ -117,12 +117,15 @@ impl Feature for InventoryFeature {
     }
 
     fn get_top_bar(&self, state: &State) -> Vec<StyledContent<String>> {
-        vec![format!(
-            " | Items: {}/{}",
-            state.inventory.items.len(),
-            state.inventory.max_size
-        )
-        .bold()]
+        vec![
+            "[d]Details ".to_string().stylize(),
+            format!(
+                " | Items: {}/{}",
+                state.inventory.items.len(),
+                state.inventory.max_size
+            )
+            .bold(),
+        ]
     }
 
     fn is_unlocked(&self, state: &State) -> bool {
