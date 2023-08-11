@@ -91,7 +91,7 @@ impl Flag<FightData> for FightFlag {
 
                 state
                     .inventory
-                    .remove("Gold", state.inventory.get_amount("Gold") * 0.5 as u64);
+                    .remove("Gold", state.inventory.get_amount("Gold") >> 1);
             }
         };
     }
