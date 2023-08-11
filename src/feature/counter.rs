@@ -21,7 +21,7 @@ impl Feature for CounterFeature {
     }
 
     fn get_top_bar(&self, _state: &State) -> Vec<StyledContent<String>> {
-        vec![" [c]Increment counter".to_string().stylize()]
+        vec![" [c]Increment".to_string().stylize()]
     }
 
     fn update(&mut self, _: f32, state: &mut State, message: &mut message::MessageManager) {
@@ -32,7 +32,7 @@ impl Feature for CounterFeature {
         if state.count == 0 {
             message.add_message(message::Message {
                     text: "Keep going until you reach 10 count, you will unlock the fight feature! You can hide messages by pressing [Enter]."
-                        .bold(),
+                        .to_string().bold(),
                     location: message::TextLocation::Center,
                     duration: 10.0,
                 });

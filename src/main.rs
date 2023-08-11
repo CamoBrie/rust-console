@@ -46,7 +46,7 @@ fn main() -> std::io::Result<()> {
 
     // render hello message
     message_manager.add_message(message::Message {
-        text: "Welcome to the game! First, go into the Counter feature.  You leave a feature with [q].".bold(),
+        text: "Welcome to the game! First, go into the Counter feature.  You leave a feature with [q].".to_string().bold(),
         location: message::TextLocation::Center,
         duration: 5.0,
     });
@@ -106,6 +106,7 @@ fn create_state() -> State {
         count: 0,
         fight: fight::FightData::default(),
         inventory: inventory::Inventory::default(),
+        upgrades: shop::Upgrades::default(),
     }
 }
 

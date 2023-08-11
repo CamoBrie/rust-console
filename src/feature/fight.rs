@@ -143,18 +143,21 @@ impl Feature for FightFeature {
                 data.xp_to_next_level
             )
             .stylize(),
+            if data.respawn_timer != data.respawn_max {
+                format!("Respawn in {:.2}", data.respawn_timer).stylize()
+            } else {
+                format!(
+                    "Enemy goal: {}/{} | Enemy HP: {} | Enemy attack: {:.2}",
+                    data.enemy_count,
+                    data.enemy_required,
+                    data.enemy.as_ref().map(|e| e.health).unwrap_or(0.0),
+                    data.enemy_timer,
+                )
+                .stylize()
+            },
             format!(
-                "Enemy goal: {}/{} | Enemy HP: {} | Enemy attack: {:.2} | Respawn: {:.2}",
-                data.enemy_count,
-                data.enemy_required,
-                data.enemy.as_ref().map(|e| e.health).unwrap_or(0.0),
-                data.enemy_timer,
-                data.respawn_timer
-            )
-            .stylize(),
-            format!(
-                "Player HP: {:.2} | Attack: {:.2}",
-                data.player.health, data.attack_timer
+                "Player HP: {:.2}/{:.2} | Damage: {:.2} | Attack: {:.2}",
+                data.player.health, data.player.max_health, data.player.attack, data.attack_timer
             )
             .stylize(),
             format!("{:?}", self.flags).stylize(),

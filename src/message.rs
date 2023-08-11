@@ -17,7 +17,7 @@ pub enum TextLocation {
 
 /// A message to be displayed
 pub struct Message {
-    pub text: StyledContent<&'static str>,
+    pub text: StyledContent<String>,
     pub location: TextLocation,
     pub duration: f32,
 }
@@ -56,7 +56,7 @@ impl MessageManager {
     pub fn render_one(&mut self) {
         if let Some(message) = self.messages.front() {
             let (t_c, t_r) = crossterm::terminal::size().unwrap_or((80, 24));
-            let lines = wrap(message.text, t_c / 2);
+            let lines = wrap(message.text.clone(), t_c / 2);
 
             lines.iter().enumerate().for_each(|(i, (len, line))| {
                 queue!(

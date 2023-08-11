@@ -1,4 +1,4 @@
-use crate::feature::{fight::FightData, inventory::Inventory};
+use crate::feature::{fight::FightData, inventory::Inventory, shop::Upgrades};
 use crossterm::event::KeyCode;
 
 /// State struct:
@@ -11,4 +11,5 @@ pub struct State {
     pub count: i32,
     pub fight: FightData,
     pub inventory: Inventory,
+    pub upgrades: Upgrades,
 }

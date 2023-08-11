@@ -9,7 +9,10 @@ use enum_iterator::Sequence;
 use crate::{
     feature::Feature,
     state::State,
-    util::flag::{Flag, Flags},
+    util::{
+        flag::{Flag, Flags},
+        style::rarity_stylize,
+    },
 };
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug, Sequence)]
@@ -68,18 +71,6 @@ impl Inventory {
                 self.cur_size -= 1;
             }
         }
-    }
-
-    pub fn get(&self, name: &str) -> Option<&Item> {
-        self.items.iter().find(|i| i.name == name)
-    }
-
-    pub fn get_mut(&mut self, name: &str) -> Option<&mut Item> {
-        self.items.iter_mut().find(|i| i.name == name)
-    }
-
-    pub fn contains(&self, name: &str) -> bool {
-        self.items.iter().any(|i| i.name == name)
     }
 
     /// Get the amount of an item in the inventory. or default 0
@@ -175,18 +166,6 @@ fn process_input(inv: &mut InventoryFeature, key: KeyCode, _state: &mut State) {
         }
         _ => {}
     }
-}
-
-fn rarity_stylize(rarity: Rarity, string: &str) -> String {
-    match rarity {
-        Rarity::Common => string.stylize().white(),
-        Rarity::Uncommon => string.stylize().green(),
-        Rarity::Rare => string.stylize().blue(),
-        Rarity::Epic => string.stylize().magenta(),
-        Rarity::Legendary => string.stylize().yellow(),
-        Rarity::Mythic => string.stylize().red().bold(),
-    }
-    .to_string()
 }
 
 fn get_item(name: &str) -> Option<Item> {

@@ -1,7 +1,3 @@
 # rust-console
 
-todo!
-
-- [] Event based popups
-- [] Shop
-- [] Loading/Saving
+Add `tui` crate
