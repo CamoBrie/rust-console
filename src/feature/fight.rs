@@ -124,7 +124,7 @@ impl Feature for FightFeature {
 
         // simple healing at floor 0.
         if state.fight.floor == 0 && state.fight.player.health <= state.fight.player.max_health {
-            state.fight.player.health += delta as f64 * 0.5;
+            state.fight.player.health += delta as f64 * state.fight.regen;
             if state.fight.player.health > state.fight.player.max_health {
                 state.fight.player.health = state.fight.player.max_health;
             }
@@ -262,6 +262,7 @@ impl Default for FightData {
 
             xp_to_next_level: 10,
             level: 1,
+            regen: 0.5,
         }
     }
 }
@@ -280,15 +281,16 @@ pub struct FightData {
 
     // fight data
     respawn_timer: f32,
-    respawn_max: f32,
+    pub respawn_max: f32,
     attack_timer: f32,
-    attack_max: f32,
+    pub attack_max: f32,
     enemy_timer: f32,
     enemy_max: f32,
 
     // player data
     xp_to_next_level: u64,
     pub level: u32,
+    pub regen: f64,
 }
 
 /// Struct for the living entities in the fight feature

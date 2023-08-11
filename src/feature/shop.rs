@@ -38,6 +38,16 @@ pub fn get_all_upgrades() -> Vec<Upgrade> {
                 state.fight.player.max_health += 1.0;
             }),
         },
+        Upgrade {
+            name: "Regeneration".to_string(),
+            description: "Doubles your health regeneration at floor 0".to_string(),
+            cost: 10,
+            max_count: 1,
+            rarity: Rarity::Uncommon,
+            apply: Box::new(|state| {
+                state.fight.regen += 0.5;
+            }),
+        },
     ]
 }
 
@@ -100,7 +110,7 @@ impl Feature for ShopFeature {
             " | Gold: ".to_string().stylize(),
             state
                 .inventory
-                .get_amount("gold")
+                .get_amount("Gold")
                 .to_string()
                 .dark_yellow()
                 .bold(),
