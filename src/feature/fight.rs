@@ -146,21 +146,30 @@ impl Feature for FightFeature {
             if data.respawn_timer != data.respawn_max {
                 format!("Respawn in {:.2}", data.respawn_timer).stylize()
             } else {
-                format!(
-                    "Enemy goal: {}/{} | Enemy HP: {} | Enemy attack: {:.2}",
-                    data.enemy_count,
-                    data.enemy_required,
-                    data.enemy.as_ref().map(|e| e.health).unwrap_or(0.0),
-                    data.enemy_timer,
-                )
-                .stylize()
+                if let Some(enemy) = &data.enemy {
+                    format!(
+                        "Enemy goal: {}/{} |{} Enemy HP: {:.2} | Enemy attack: {:.2}",
+                        data.enemy_count,
+                        data.enemy_required,
+                        if enemy.defense > 0.0 {
+                            format!(" Enemy defense: {:.2} |", enemy.defense).stylize()
+                        } else {
+                            "".to_string().stylize()
+                        },
+                        enemy.health,
+                        data.enemy_timer,
+                    )
+                    .stylize()
+                } else {
+                    "No enemy".to_string().stylize()
+                }
             },
             format!(
                 "Player HP: {:.2}/{:.2} | Damage: {:.2} | Attack: {:.2}",
                 data.player.health, data.player.max_health, data.player.attack, data.attack_timer
             )
             .stylize(),
-            format!("{:?}", self.flags).stylize(),
+            //format!("{:?}", self.flags).stylize(),
         ]
     }
 }

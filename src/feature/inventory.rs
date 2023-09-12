@@ -118,13 +118,13 @@ impl Feature for InventoryFeature {
 
     fn get_top_bar(&self, state: &State) -> Vec<StyledContent<String>> {
         vec![
-            "[d]Details ".to_string().stylize(),
             format!(
-                " | Items: {}/{}",
+                " {}/{} | ",
                 state.inventory.items.len(),
                 state.inventory.max_size
             )
             .bold(),
+            "[d]Details ".to_string().stylize(),
         ]
     }
 
